@@ -1,0 +1,15 @@
+# Read about fixtures at https://api.rubyonrails.org/classes/ActiveRecord/FixtureSet.html
+
+one:
+  name: MyString
+  due_on: 2026-07-25
+  birth_on: 2026-07-25
+  baby_name: MyString
+  invite_code: MyString
+
+two:
+  name: MyString
+  due_on: 2026-07-25
+  birth_on: 2026-07-25
+  baby_name: MyString
+  invite_code: MyString
