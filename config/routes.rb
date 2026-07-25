@@ -16,5 +16,6 @@ Rails.application.routes.draw do
     post "signup", to: "auth#signup"
     post "login",  to: "auth#login"
     get  "me",     to: "auth#me"
+    resources :checklist_items, only: %i[index create update destroy]
   end
 end
