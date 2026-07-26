@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_07_25_103246) do
+ActiveRecord::Schema[7.2].define(version: 2026_07_26_080135) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -30,6 +30,17 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_25_103246) do
     t.index ["done_by_id"], name: "index_checklist_items_on_done_by_id"
     t.index ["household_id", "category", "position"], name: "idx_on_household_id_category_position_00487edb03"
     t.index ["household_id"], name: "index_checklist_items_on_household_id"
+  end
+
+  create_table "contraction_events", force: :cascade do |t|
+    t.bigint "household_id", null: false
+    t.datetime "occurred_at", null: false
+    t.bigint "recorded_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["household_id", "occurred_at"], name: "index_contraction_events_on_household_id_and_occurred_at"
+    t.index ["household_id"], name: "index_contraction_events_on_household_id"
+    t.index ["recorded_by_id"], name: "index_contraction_events_on_recorded_by_id"
   end
 
   create_table "households", force: :cascade do |t|
@@ -59,5 +70,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_07_25_103246) do
 
   add_foreign_key "checklist_items", "households"
   add_foreign_key "checklist_items", "users", column: "done_by_id"
+  add_foreign_key "contraction_events", "households"
+  add_foreign_key "contraction_events", "users", column: "recorded_by_id"
   add_foreign_key "users", "households"
 end

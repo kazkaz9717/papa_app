@@ -17,5 +17,7 @@ Rails.application.routes.draw do
     post "login",  to: "auth#login"
     get  "me",     to: "auth#me"
     resources :checklist_items, only: %i[index create update destroy]
+    # 陣痛の記録：一覧・記録・取り消し
+    resources :contraction_events, only: %i[index create destroy]
   end
 end

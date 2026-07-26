@@ -1,6 +1,8 @@
 class Household < ApplicationRecord
   has_many :users, dependent: :destroy
   has_many :checklist_items, dependent: :destroy
+  # この家族の陣痛の記録（1つの家族が複数の記録を持つ）
+  has_many :contraction_events, dependent: :destroy
 
   before_validation :ensure_invite_code, on: :create
   after_create :seed_default_checklist_items
