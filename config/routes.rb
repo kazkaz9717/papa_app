@@ -18,6 +18,9 @@ Rails.application.routes.draw do
     get  "me",     to: "auth#me"
     resources :checklist_items, only: %i[index create update destroy]
     # 陣痛の記録：一覧・記録・取り消し
-    resources :contraction_events, only: %i[index create destroy]
+    # 陣痛の記録：一覧・記録・取り消し ＋ リセット
+    resources :contraction_events, only: %i[index create destroy] do
+      collection { delete :reset }
+    end
   end
 end

@@ -33,6 +33,13 @@ module Api
       render json: { stats: ContractionEvent.stats(all_events) }
     end
 
+    # DELETE /api/contraction_events/reset
+    # これまでの記録を全部消して、計測をやり直す
+    def reset
+      current_household.contraction_events.destroy_all
+      render json: { stats: ContractionEvent.stats([]) } # 空の統計を返す
+    end
+
     private
 
     # その家族の全記録を古い順の配列で取得（統計計算に渡す用）

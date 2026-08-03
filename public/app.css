@@ -369,3 +369,12 @@ body {
     background: var(--warn-bg);
     color: var(--warn-dark)
 }
+
+.tm-reset {
+    margin-top: 8px;
+    background: none;
+    border: none;
+    color: var(--hint);
+    font-size: 12px;
+    cursor: pointer
+}

@@ -58,6 +58,7 @@ function enterApp() {
     $("#auth").hidden = true;
     $("#app").hidden = false;
     loadChecklist();
+    loadContractions();
 }
 function signOut() { Token.set(null); location.reload(); }
 
@@ -113,6 +114,61 @@ async function toggleItem(id, done) {
     loadChecklist();
 }
 
+// ===== 陣痛タイマー =====
+let lastContraction = null; // 最後に記録した時刻（経過時間の表示に使う）
+
+// 一覧＋統計を取得して画面に反映
+async function loadContractions() {
+    const data = await api("GET", "/contraction_events");
+    applyStats(data.stats);
+}
+
+// 統計（回数・平均間隔・病院連絡の目安）を画面に反映する
+function applyStats(stats) {
+    if (!stats) return;
+    $("#st-cnt").textContent = (stats.count || 0) + "回";
+    $("#st-int").textContent = stats.average_interval_sec
+        ? Math.round(stats.average_interval_sec / 60 * 10) / 10 + "分" // 秒→分に変換（小数1桁）
+        : "—";
+    // 最後の記録時刻を覚えておく（毎秒の経過表示に使う）
+    lastContraction = stats.last_occurred_at ? new Date(stats.last_occurred_at) : null;
+    // 目安に達したら黄色い警告、そうでなければ通常メッセージ
+    const a = $("#alert");
+    if (stats.call_hospital) {
+        a.className = "banner warn";
+        a.textContent = "📞 そろそろ病院に電話（目安に近づいています）";
+    } else {
+        a.className = "banner mute";
+        a.textContent = "「陣痛が来た」を押すと間隔を計測します";
+    }
+}
+
+// 「陣痛が来た」ボタン：今の時刻で1件記録し、返ってきた統計を反映
+async function recordContraction() {
+    const data = await api("POST", "/contraction_events", {});
+    applyStats(data.stats);
+}
+
+// リセット：確認のうえ、これまでの記録を全部消して計測をやり直す
+async function resetContractions() {
+    if (!confirm("これまでの陣痛の記録をリセットしますか？")) return;
+    const data = await api("DELETE", "/contraction_events/reset");
+    lastContraction = null;               // 経過表示のもとをクリア
+    $("#tm-main").textContent = "00:00";  // 大きな数字を00:00に戻す
+    applyStats(data.stats);               // 空の統計を反映（回数0・平均— など）
+}
+
+// 時計と「前回からの経過」を毎秒更新する
+function two(n) { return (n < 10 ? "0" : "") + n; }
+setInterval(() => {
+    const d = new Date();
+    if ($("#clock")) $("#clock").textContent = two(d.getHours()) + ":" + two(d.getMinutes());
+    if ($("#tm-main") && lastContraction) {
+        const s = Math.floor((Date.now() - lastContraction.getTime()) / 1000);
+        $("#tm-main").textContent = two(Math.floor(s / 60)) + ":" + two(s % 60);
+    }
+}, 1000);
+
 // ===== 起動時の処理 =====
 document.addEventListener("DOMContentLoaded", async () => {
     setupTabs();
@@ -125,6 +181,8 @@ document.addEventListener("DOMContentLoaded", async () => {
         $("#toggle-auth").textContent = isLogin ? "新規登録はこちら" : "ログインはこちら";
     });
     $$("[data-signout]").forEach(b => b.addEventListener("click", signOut));
+    $("#tm-btn").addEventListener("click", recordContraction);
+    $("#tm-reset").addEventListener("click", resetContractions);
 
     // すでに鍵があれば自動ログイン
     if (Token.get()) {
