@@ -566,3 +566,16 @@ body {
 .chk .del:hover {
     color: var(--danger-dark)
 }
+
+/* 「詳しく見る（公式サイト）」の外部リンク */
+.meta-link {
+    display: inline-block;
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--accent-dark);
+    text-decoration: none;
+}
+
+.meta-link:hover {
+    text-decoration: underline;
+}

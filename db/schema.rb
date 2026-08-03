@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_03_070942) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_03_092247) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -24,6 +24,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_03_070942) do
     t.string "timing_note"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "url"
     t.index ["household_id", "position"], name: "index_benefit_steps_on_household_id_and_position"
     t.index ["household_id"], name: "index_benefit_steps_on_household_id"
   end

@@ -27,7 +27,8 @@ module Api
         title: step.title,
         description: step.description,
         status: step.status,
-        timing_note: step.timing_note
+        timing_note: step.timing_note,
+        url: step.url
       }
     end
   end

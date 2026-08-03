@@ -116,7 +116,7 @@ async function addChecklistItem(category, inputSel, buttonSel) {
     loadChecklist();      // 一覧を再読み込みして、追加した項目を表示
 }
 
-// 手続き：カード形式で描画（提出先・補足つき）
+// 手続き：カード形式で描画（提出先・補足・公式リンクつき）
 function renderDoc(sel, items) {
     $(sel).innerHTML = (items || []).map(i =>
         `<div class="card" data-id="${i.id}">
@@ -126,6 +126,7 @@ function renderDoc(sel, items) {
        </div>
        ${i.place ? `<p class="meta">📍 ${esc(i.place)}</p>` : ""}
        ${i.detail ? `<p class="meta">${esc(i.detail)}</p>` : ""}
+       ${i.url ? `<a class="meta-link" href="${esc(i.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 詳しく見る（公式サイト）</a>` : ""}
      </div>`).join("") || `<div class="empty">項目がありません</div>`;
     $$(`${sel} .card`).forEach(el => el.addEventListener("click",
         () => toggleItem(el.dataset.id, !el.querySelector(".pill").classList.contains("g"))));
@@ -198,7 +199,6 @@ async function loadBenefits() {
 
 // ステップの配列を、時間軸（タイムライン）のカードとして描画する
 function renderBenefits(steps) {
-    // 状態ごとの色を決めておく（未=グレー、進行中=赤系、完了=緑系）
     const colors = {
         todo: ["#f0f1ee", "var(--muted)"],
         doing: ["var(--danger-bg)", "var(--danger-dark)"],
@@ -208,14 +208,13 @@ function renderBenefits(steps) {
 
     $("#money-list").innerHTML = steps.map((s, i) => {
         const [bg, fg] = colors[s.status] || colors.todo;
-        // 完了なら✓、進行中なら●、未なら番号を表示
         const mark = s.status === "done" ? "✓" : s.status === "doing" ? "●" : (i + 1);
-        // 最後のステップ以外は、下に線を伸ばして次につなげる
         const line = i < steps.length - 1 ? `<div class="ln"></div>` : "";
-        // 3つの状態ボタン（未・進行中・完了）を作る。今の状態には on クラスを付ける
         const buttons = ["todo", "doing", "done"].map(st =>
             `<button data-step="${s.id}" data-status="${st}" class="${s.status === st ? "on" : ""}">${labels[st]}</button>`
         ).join("");
+        // 公式リンクがあれば「詳しく見る」を表示
+        const link = s.url ? `<a class="meta-link" href="${esc(s.url)}" target="_blank" rel="noopener">🔗 詳しく見る（公式サイト）</a>` : "";
 
         return `<div class="tl">
       <div class="dot"><div class="c" style="background:${bg};color:${fg}">${mark}</div>${line}</div>
@@ -224,15 +223,15 @@ function renderBenefits(steps) {
         <p class="ti">${esc(s.title)}</p>
         <p class="tx">${esc(s.description)}</p>
         <div class="btns">${buttons}</div>
+        ${link}
       </div>
     </div>`;
     }).join("");
 
-    // 各状態ボタンにクリックを登録。押したらAPIに更新を送って再読み込み
     $$("#money-list [data-step]").forEach(btn => {
         btn.addEventListener("click", async () => {
             await api("PATCH", "/benefit_steps/" + btn.dataset.step, { status: btn.dataset.status });
-            loadBenefits(); // 最新の状態で描画し直す
+            loadBenefits();
         });
     });
 }
