@@ -16,6 +16,11 @@
 
         <!-- 新規登録のときだけ表示する項目 -->
         <div id="signup-fields" hidden>
+            <div class="modes">
+                <button type="button" data-mode="new" class="on">新しく家族を作る</button>
+                <button type="button" data-mode="join">相手として参加</button>
+            </div>
+
             <label>役割</label>
             <select id="f-role">
                 <option value="husband">夫</option>
@@ -23,8 +28,16 @@
             </select>
             <label>お名前</label>
             <input id="f-name" placeholder="太郎">
-            <label>家族の名前</label>
-            <input id="f-household" placeholder="山田家">
+
+            <div id="new-household-fields">
+                <label>家族の名前</label>
+                <input id="f-household" placeholder="山田家">
+            </div>
+
+            <div id="join-household-fields" hidden>
+                <label>招待コード（相手から共有してもらう）</label>
+                <input id="f-invite" placeholder="ABC123">
+            </div>
         </div>
 
         <label>メールアドレス</label>
@@ -46,6 +59,7 @@
                     <div class="hd">
                         <h2>🗒 妊娠後期・準備</h2>
                         <p class="sub">やること</p>
+                        <p class="sub" id="invite-info"></p>
                         <button class="signout" data-signout>ログアウト</button>
                     </div>
                     <div class="body">

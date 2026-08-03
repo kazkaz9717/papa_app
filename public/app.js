@@ -29,6 +29,7 @@ async function api(method, path, body) {
 
 // ===== 認証（ログイン / 新規登録）=====
 let isLogin = true; // true=ログイン, false=新規登録
+let signupMode = "new"; // "new"=新しく家族を作る, "join"=相手として参加
 
 async function submitAuth() {
     $("#auth-err").textContent = "";
@@ -39,17 +40,24 @@ async function submitAuth() {
                 email: $("#f-email").value, password: $("#f-password").value,
             });
         } else {
-            data = await api("POST", "/signup", {
-                role: $("#f-role").value, name: $("#f-name").value,
-                household_name: $("#f-household").value,
-                email: $("#f-email").value, password: $("#f-password").value,
-            });
+            const body = {
+                role: $("#f-role").value,
+                name: $("#f-name").value,
+                email: $("#f-email").value,
+                password: $("#f-password").value,
+            };
+            if (signupMode === "new") {
+                body.household_name = $("#f-household").value;
+            } else {
+                body.invite_code = $("#f-invite").value;
+            }
+            data = await api("POST", "/signup", body);
         }
-        Token.set(data.token);                       // 鍵を保存
+        Token.set(data.token);
         ME = { user: data.user, household: data.household };
         enterApp();
     } catch (e) {
-        $("#auth-err").textContent = e.message;      // エラー文を表示
+        $("#auth-err").textContent = e.message;
     }
 }
 
@@ -57,6 +65,9 @@ async function submitAuth() {
 function enterApp() {
     $("#auth").hidden = true;
     $("#app").hidden = false;
+    if (ME?.household?.invite_code) {
+        $("#invite-info").textContent = `招待コード: ${ME.household.invite_code}（パートナーに伝えてください）`;
+    }
     loadChecklist();
     loadContractions();
     loadBenefits();
@@ -370,6 +381,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         $("#btn-submit").textContent = isLogin ? "ログイン" : "新規登録";
         $("#toggle-auth").textContent = isLogin ? "新規登録はこちら" : "ログインはこちら";
     });
+    // 「新しく家族を作る／相手として参加」の切り替え
+    $$("[data-mode]").forEach(btn => btn.addEventListener("click", () => {
+        signupMode = btn.dataset.mode;
+        $$("[data-mode]").forEach(b => b.classList.toggle("on", b === btn));
+        $("#new-household-fields").hidden = signupMode !== "new";
+        $("#join-household-fields").hidden = signupMode !== "join";
+    }));
     $$("[data-signout]").forEach(b => b.addEventListener("click", signOut));
     $("#tm-btn").addEventListener("click", recordContraction);
     $("#tm-reset").addEventListener("click", resetContractions);
