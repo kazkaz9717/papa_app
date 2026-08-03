@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ja">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>出産前後 パパアプリ</title>
+    <link rel="stylesheet" href="/app.css">
+</head>
+
+<body>
+    <!-- ログイン / 新規登録 画面 -->
+    <div id="auth">
+        <h1>出産前後 パパアプリ</h1>
+        <p class="lead">夫が「いつ・何をすべきか」で迷わないためのアプリ。</p>
+
+        <!-- 新規登録のときだけ表示する項目 -->
+        <div id="signup-fields" hidden>
+            <label>役割</label>
+            <select id="f-role">
+                <option value="husband">夫</option>
+                <option value="wife">妻</option>
+            </select>
+            <label>お名前</label>
+            <input id="f-name" placeholder="太郎">
+            <label>家族の名前</label>
+            <input id="f-household" placeholder="山田家">
+        </div>
+
+        <label>メールアドレス</label>
+        <input id="f-email" type="email" placeholder="you@example.com">
+        <label>パスワード</label>
+        <input id="f-password" type="password" placeholder="password">
+
+        <div class="err" id="auth-err"></div>
+        <button class="btn" id="btn-submit">ログイン</button>
+        <div class="switch" id="toggle-auth">新規登録はこちら</div>
+    </div>
+
+    <!-- アプリ本体（ログイン後に表示）-->
+    <div id="app" hidden>
+        <div class="phone">
+            <div class="screen">
+                <!-- 段取り -->
+                <section class="view active" id="v-prep">
+                    <div class="hd">
+                        <h2>🗒 妊娠後期・準備</h2>
+                        <p class="sub">やること</p>
+                        <button class="signout" data-signout>ログアウト</button>
+                    </div>
+                    <div class="body">
+                        <div class="list" id="prep-list"></div>
+                    </div>
+                </section>
+                <!-- 当日（陣痛タイマーは次で動かします）-->
+                <section class="view" id="v-day">
+                    <div class="hd">
+                        <h2>⏱ 陣痛モード</h2>
+                        <p class="sub" id="clock">--:--</p>
+                    </div>
+                    <div class="body">
+                        <div class="timer">
+                            <p class="sub">前回からの経過</p>
+                            <p class="big" id="tm-main">00:00</p>
+                            <button class="btn-big" id="tm-btn">▶ 陣痛が来た（記録）</button>
+                        </div>
+                        <div class="stats">
+                            <div class="stat">
+                                <p class="k">平均間隔</p>
+                                <p class="v" id="st-int">—</p>
+                            </div>
+                            <div class="stat">
+                                <p class="k">記録回数</p>
+                                <p class="v" id="st-cnt">0回</p>
+                            </div>
+                        </div>
+                        <div class="banner mute" id="alert">「陣痛が来た」を押すと間隔を計測します</div>
+                        <p class="sec">当日やること</p>
+                        <div class="list" id="day-list"></div>
+                    </div>
+                </section>
+                <!-- 手続き -->
+                <section class="view" id="v-doc">
+                    <div class="hd">
+                        <h2>📄 出産手続き</h2>
+                        <p class="sub">届出リスト</p>
+                    </div>
+                    <div class="body">
+                        <div id="doc-list"></div>
+                    </div>
+                </section>
+                <!-- お金・記録（バックエンドはこれから）-->
+                <section class="view" id="v-money">
+                    <div class="hd">
+                        <h2>💰 育休・給付金</h2>
+                    </div>
+                    <div class="body">
+                        <div class="empty">近日対応</div>
+                    </div>
+                </section>
+                <section class="view" id="v-log">
+                    <div class="hd">
+                        <h2>📓 育児記録</h2>
+                    </div>
+                    <div class="body">
+                        <div class="empty">近日対応</div>
+                    </div>
+                </section>
+            </div>
+            <nav class="tabs">
+                <button class="tab on" data-v="v-prep"><span class="ic">🗒</span>段取り</button>
+                <button class="tab" data-v="v-day"><span class="ic">⏱</span>当日</button>
+                <button class="tab" data-v="v-doc"><span class="ic">📄</span>手続き</button>
+                <button class="tab" data-v="v-money"><span class="ic">💰</span>お金</button>
+                <button class="tab" data-v="v-log"><span class="ic">📓</span>記録</button>
+            </nav>
+        </div>
+    </div>
+
+    <script src="/app.js"></script>
+</body>
+
+</html>
