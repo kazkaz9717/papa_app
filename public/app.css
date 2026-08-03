@@ -1,3 +1,10 @@
+/* ==========================================================================
+   共通の色・変数（テーマカラー）
+   accent = 緑系（メインカラー・完了・OK）
+   danger = オレンジ系（当日・警告寄り）
+   warn   = 黄系（注意・アラート）
+   ink/muted/hint = 文字色（濃い→薄い の3段階）
+   ========================================================================== */
 :root {
     --accent: #1d9e75;
     --accent-bg: #e1f5ee;
@@ -15,10 +22,12 @@
     --bg: #f3f5f2;
 }
 
+/* 全要素共通：paddingやborderをwidthの内側に含める（サイズ計算をシンプルにする） */
 * {
     box-sizing: border-box
 }
 
+/* ページ全体：中央にスマホ風の画面を1つ置くためのレイアウト */
 body {
     margin: 0;
     font-family: -apple-system, "Hiragino Sans", "Yu Gothic UI", sans-serif;
@@ -31,6 +40,10 @@ body {
     padding: 24px 12px
 }
 
+
+/* ==========================================================================
+   ログイン / 新規登録 画面（#auth）
+   ========================================================================== */
 #auth {
     width: 360px;
     max-width: 100%;
@@ -46,6 +59,7 @@ body {
     color: var(--accent-dark)
 }
 
+/* 見出し下の説明文 */
 #auth p.lead {
     font-size: 13px;
     color: var(--muted);
@@ -53,6 +67,7 @@ body {
     line-height: 1.6
 }
 
+/* 各入力欄の上に出るラベル（「メールアドレス」など） */
 #auth label {
     display: block;
     font-size: 12px;
@@ -60,6 +75,7 @@ body {
     margin: 10px 0 4px
 }
 
+/* テキスト入力・選択欄の見た目 */
 #auth input,
 #auth select {
     width: 100%;
@@ -70,6 +86,7 @@ body {
     font-size: 15px
 }
 
+/* 「ログイン」「新規登録」の緑ボタン */
 #auth .btn {
     width: 100%;
     height: 44px;
@@ -83,6 +100,7 @@ body {
     cursor: pointer
 }
 
+/* 「新規登録はこちら」等の切り替えリンク */
 #auth .switch {
     text-align: center;
     font-size: 13px;
@@ -91,12 +109,19 @@ body {
     cursor: pointer
 }
 
+/* ログイン失敗時などのエラーメッセージ */
 #auth .err {
     color: var(--danger-dark);
     font-size: 13px;
     margin-top: 10px
 }
 
+
+/* ==========================================================================
+   アプリ本体：スマホの外枠 と タブ内の各画面
+   ========================================================================== */
+
+/* スマホ本体っぽく見せるための外枠 */
 .phone {
     width: 390px;
     max-width: 100%;
@@ -110,11 +135,13 @@ body {
     box-shadow: 0 18px 44px rgba(0, 0, 0, .14)
 }
 
+/* タブの中身が入る、スクロールできるエリア */
 .screen {
     flex: 1;
     overflow-y: auto
 }
 
+/* 各タブの画面。.active が付いているものだけ表示する（それ以外は非表示） */
 .view {
     display: none;
     padding: 0 0 12px
@@ -124,6 +151,7 @@ body {
     display: block
 }
 
+/* 画面上部のヘッダー（タイトル・サブ情報）。スクロールしても上に固定表示 */
 .hd {
     padding: 14px 18px;
     background: var(--card);
@@ -138,12 +166,14 @@ body {
     font-weight: 600
 }
 
+/* ヘッダー内の補足テキスト（予定日まで◯日、など） */
 .hd .sub {
     margin: 5px 0 0;
     font-size: 12px;
     color: var(--muted)
 }
 
+/* ヘッダー右上の「ログアウト」ボタン */
 .hd .signout {
     position: absolute;
     top: 14px;
@@ -155,10 +185,17 @@ body {
     cursor: pointer
 }
 
+/* ヘッダーの下、画面本体のpadding */
 .body {
     padding: 14px
 }
 
+
+/* ==========================================================================
+   チェックリスト（段取り・当日タブで使用）
+   ========================================================================== */
+
+/* チェック項目を並べる白いカードの外枠 */
 .list {
     background: var(--card);
     border: 1px solid var(--line);
@@ -166,6 +203,7 @@ body {
     overflow: hidden
 }
 
+/* チェック項目1行分（タップで完了/未完了を切り替える） */
 .chk {
     display: flex;
     align-items: center;
@@ -180,6 +218,7 @@ body {
     border-bottom: none
 }
 
+/* チェックボックスの四角部分（未完了時） */
 .chk .box {
     width: 20px;
     height: 20px;
@@ -192,24 +231,33 @@ body {
     font-size: 13px
 }
 
+/* 完了状態：四角を緑で塗りつぶす */
 .chk.done .box {
     background: var(--accent);
     border-color: var(--accent)
 }
 
+/* 完了状態：文字に取り消し線＋グレーに */
 .chk.done .txt {
     text-decoration: line-through;
     color: var(--hint)
 }
 
+/* 項目タイトルのテキスト部分（残りの横幅いっぱいに広げる） */
 .chk .txt {
     flex: 1
 }
 
+/* 「完了した人（夫/妻）」を示す小さい文字 */
 .chk .by {
     font-size: 10px;
     color: var(--hint)
 }
+
+
+/* ==========================================================================
+   カード（手続きタブなど、詳細情報を持つ項目で使用）
+   ========================================================================== */
 
 .card {
     background: var(--card);
@@ -219,28 +267,33 @@ body {
     margin-bottom: 10px
 }
 
+/* カード内で左右に要素を並べるための行（タイトルと状態ピルなど） */
 .row {
     display: flex;
     align-items: center;
     justify-content: space-between
 }
 
+/* カード内のタイトル文字 */
 .t14 {
     font-size: 14px;
     font-weight: 500
 }
 
+/* 完了した項目のタイトルに取り消し線を付ける */
 .strike {
     text-decoration: line-through;
     color: var(--hint)
 }
 
+/* 「完了」「未」などの丸いラベル（ピル） */
 .pill {
     font-size: 11px;
     padding: 3px 10px;
     border-radius: 20px
 }
 
+/* ピルの色違い：g=完了（緑）、n=未（グレー） */
 .pill.g {
     background: var(--accent-bg);
     color: var(--accent-dark)
@@ -251,6 +304,7 @@ body {
     color: var(--muted)
 }
 
+/* カード内の補足説明（提出先・detail など） */
 .meta {
     font-size: 12px;
     color: var(--muted);
@@ -258,18 +312,25 @@ body {
     line-height: 1.6
 }
 
+/* セクション見出し（「当日やること」「今日のログ」など） */
 .sec {
     font-size: 13px;
     font-weight: 600;
     margin: 6px 0 8px
 }
 
+/* 一覧が0件のときに出す文言 */
 .empty {
     font-size: 12px;
     color: var(--hint);
     text-align: center;
     padding: 16px
 }
+
+
+/* ==========================================================================
+   下部タブバー（段取り・当日・手続き・お金・記録の5ボタン）
+   ========================================================================== */
 
 .tabs {
     display: flex;
@@ -292,14 +353,22 @@ body {
     cursor: pointer
 }
 
+/* タブのアイコン部分 */
 .tab .ic {
     font-size: 19px
 }
 
+/* 今選ばれているタブだけアクセントカラーにする */
 .tab.on {
     color: var(--accent)
 }
 
+
+/* ==========================================================================
+   陣痛タイマー（当日タブ）
+   ========================================================================== */
+
+/* タイマー全体を囲む白いカード */
 .timer {
     background: var(--card);
     border: 1px solid var(--line);
@@ -308,13 +377,16 @@ body {
     text-align: center
 }
 
+/* 「前回からの経過」の大きい数字（00:00 など） */
 .timer .big {
     font-size: 40px;
     font-weight: 600;
     margin: 4px 0;
     font-variant-numeric: tabular-nums
+        /* 数字の幅を揃えてガタつきを防ぐ */
 }
 
+/* 「陣痛が来た（記録）」の大きい赤系ボタン */
 .timer .btn-big {
     width: 100%;
     border: none;
@@ -327,6 +399,7 @@ body {
     cursor: pointer
 }
 
+/* 「平均間隔」「記録回数」を横並びで見せるカード群 */
 .stats {
     display: flex;
     gap: 8px;
@@ -341,18 +414,21 @@ body {
     text-align: center
 }
 
+/* 統計カードのラベル（「平均間隔」など） */
 .stat .k {
     font-size: 11px;
     color: var(--muted);
     margin: 0
 }
 
+/* 統計カードの数値 */
 .stat .v {
     font-size: 17px;
     font-weight: 600;
     margin: 2px 0 0
 }
 
+/* お知らせバナー（通常メッセージ／病院連絡アラート） */
 .banner {
     border-radius: 11px;
     padding: 11px;
@@ -360,16 +436,19 @@ body {
     margin: 10px 0
 }
 
+/* 通常時：グレーの落ち着いた見た目 */
 .banner.mute {
     background: #f0f1ee;
     color: var(--muted)
 }
 
+/* 目安に到達したときの警告：黄色系で目立たせる */
 .banner.warn {
     background: var(--warn-bg);
     color: var(--warn-dark)
 }
 
+/* 「リセット（新しく計測）」の控えめなテキストボタン */
 .tm-reset {
     margin-top: 8px;
     background: none;
@@ -377,4 +456,97 @@ body {
     color: var(--hint);
     font-size: 12px;
     cursor: pointer
+}
+
+
+/* ==========================================================================
+   タイムライン（お金タブ：育休・給付金ステップの時間軸表示）
+   ========================================================================== */
+
+/* タイムライン1項目分の行（左に丸アイコン、右に内容） */
+.tl {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 2px
+}
+
+/* 左側：丸アイコンと、次の項目へつながる縦線をまとめた列 */
+.tl .dot {
+    flex: 0 0 auto;
+    width: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center
+}
+
+/* 丸アイコン本体（数字 / ● / ✓ が状態に応じて入る） */
+.tl .dot .c {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px
+}
+
+/* 丸アイコンの下から次の項目まで伸びる縦線（最後の項目には付けない） */
+.tl .dot .ln {
+    flex: 1;
+    width: 2px;
+    background: var(--line);
+    margin-top: 2px;
+    min-height: 14px
+}
+
+/* 右側：タイトルや説明文が入るエリア */
+.tl .ct {
+    flex: 1;
+    padding-bottom: 14px
+}
+
+/* 時期の目安（「出産前」「今ここ」など） */
+.tl .ph {
+    font-size: 11px;
+    margin: 0;
+    color: var(--hint)
+}
+
+/* ステップのタイトル */
+.tl .ti {
+    font-size: 14px;
+    font-weight: 600;
+    margin: 1px 0 0
+}
+
+/* ステップの説明文 */
+.tl .tx {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin: 4px 0 0
+}
+
+/* 「未・進行中・完了」の状態切り替えボタンを横に並べるエリア */
+.tl .btns {
+    display: flex;
+    gap: 6px;
+    margin-top: 7px
+}
+
+.tl .btns button {
+    font-size: 11px;
+    padding: 3px 9px;
+    border-radius: 20px;
+    border: 1px solid var(--line);
+    background: #fff;
+    color: var(--muted);
+    cursor: pointer
+}
+
+/* 今選ばれている状態のボタンだけ緑系でハイライト */
+.tl .btns button.on {
+    background: var(--accent-bg);
+    color: var(--accent-dark);
+    border-color: var(--accent)
 }

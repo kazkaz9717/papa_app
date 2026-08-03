@@ -59,6 +59,7 @@ function enterApp() {
     $("#app").hidden = false;
     loadChecklist();
     loadContractions();
+    loadBenefits();
 }
 function signOut() { Token.set(null); location.reload(); }
 
@@ -156,6 +157,55 @@ async function resetContractions() {
     lastContraction = null;               // 経過表示のもとをクリア
     $("#tm-main").textContent = "00:00";  // 大きな数字を00:00に戻す
     applyStats(data.stats);               // 空の統計を反映（回数0・平均— など）
+}
+
+// ===== お金（育休・給付金）=====
+
+// 一覧を取得して画面に描画する
+async function loadBenefits() {
+    const steps = await api("GET", "/benefit_steps"); // 配列がそのまま返る
+    renderBenefits(steps);
+}
+
+// ステップの配列を、時間軸（タイムライン）のカードとして描画する
+function renderBenefits(steps) {
+    // 状態ごとの色を決めておく（未=グレー、進行中=赤系、完了=緑系）
+    const colors = {
+        todo: ["#f0f1ee", "var(--muted)"],
+        doing: ["var(--danger-bg)", "var(--danger-dark)"],
+        done: ["var(--accent-bg)", "var(--accent-dark)"],
+    };
+    const labels = { todo: "未", doing: "進行中", done: "完了" };
+
+    $("#money-list").innerHTML = steps.map((s, i) => {
+        const [bg, fg] = colors[s.status] || colors.todo;
+        // 完了なら✓、進行中なら●、未なら番号を表示
+        const mark = s.status === "done" ? "✓" : s.status === "doing" ? "●" : (i + 1);
+        // 最後のステップ以外は、下に線を伸ばして次につなげる
+        const line = i < steps.length - 1 ? `<div class="ln"></div>` : "";
+        // 3つの状態ボタン（未・進行中・完了）を作る。今の状態には on クラスを付ける
+        const buttons = ["todo", "doing", "done"].map(st =>
+            `<button data-step="${s.id}" data-status="${st}" class="${s.status === st ? "on" : ""}">${labels[st]}</button>`
+        ).join("");
+
+        return `<div class="tl">
+      <div class="dot"><div class="c" style="background:${bg};color:${fg}">${mark}</div>${line}</div>
+      <div class="ct">
+        <p class="ph">${esc(s.timing_note || s.phase_label)}</p>
+        <p class="ti">${esc(s.title)}</p>
+        <p class="tx">${esc(s.description)}</p>
+        <div class="btns">${buttons}</div>
+      </div>
+    </div>`;
+    }).join("");
+
+    // 各状態ボタンにクリックを登録。押したらAPIに更新を送って再読み込み
+    $$("#money-list [data-step]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            await api("PATCH", "/benefit_steps/" + btn.dataset.step, { status: btn.dataset.status });
+            loadBenefits(); // 最新の状態で描画し直す
+        });
+    });
 }
 
 // 時計と「前回からの経過」を毎秒更新する
