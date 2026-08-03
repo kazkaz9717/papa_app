@@ -82,16 +82,38 @@ async function loadChecklist() {
     renderDoc("#doc-list", data.procedure);
 }
 
-// 段取り・当日：チェックボックス形式で描画
+// 段取り・当日：チェックボックス形式で描画（削除ボタン付き）
 function renderChecks(sel, items) {
     $(sel).innerHTML = (items || []).map(i =>
-        `<label class="chk ${i.done ? "done" : ""}" data-id="${i.id}">
+        `<div class="chk ${i.done ? "done" : ""}" data-id="${i.id}">
        <span class="box">✓</span><span class="txt">${esc(i.title)}</span>
        ${i.done && i.done_by ? `<span class="by">${esc(i.done_by)}</span>` : ""}
-     </label>`).join("") || `<div class="empty">項目がありません</div>`;
-    // クリックで完了・未完了を切り替え
-    $$(`${sel} .chk`).forEach(el => el.addEventListener("click",
-        () => toggleItem(el.dataset.id, !el.classList.contains("done"))));
+       <button class="del" data-del="${i.id}" title="削除">×</button>
+     </div>`).join("") || `<div class="empty">項目がありません</div>`;
+
+    // チェック部分（div自体）をクリックしたら完了・未完了を切り替え
+    $$(`${sel} .chk`).forEach(el => el.addEventListener("click", (ev) => {
+        // ×ボタンが押されたときはチェック切り替えをしない（下のdeleteハンドラに任せる）
+        if (ev.target.closest(".del")) return;
+        toggleItem(el.dataset.id, !el.classList.contains("done"));
+    }));
+
+    // ×ボタン：確認のうえ削除
+    $$(`${sel} .del`).forEach(btn => btn.addEventListener("click", (ev) => {
+        ev.stopPropagation(); // 親のchkクリック（完了切り替え）に伝わらないようにする
+        deleteItem(btn.dataset.del);
+    }));
+}
+
+// 新しい項目を追加する共通処理（category と、入力欄/ボタンのidを受け取る）
+async function addChecklistItem(category, inputSel, buttonSel) {
+    const input = $(inputSel);
+    const title = input.value.trim();
+    if (!title) return; // 空なら何もしない
+
+    await api("POST", "/checklist_items", { category, title });
+    input.value = "";     // 入力欄を空にする
+    loadChecklist();      // 一覧を再読み込みして、追加した項目を表示
 }
 
 // 手続き：カード形式で描画（提出先・補足つき）
@@ -112,6 +134,13 @@ function renderDoc(sel, items) {
 // 完了トグル：APIに更新を送って、再読み込み
 async function toggleItem(id, done) {
     await api("PATCH", "/checklist_items/" + id, { done });
+    loadChecklist();
+}
+
+// 項目を削除する。確認してからAPIにDELETEを送り、一覧を再読み込み
+async function deleteItem(id) {
+    if (!confirm("この項目を削除しますか？")) return;
+    await api("DELETE", "/checklist_items/" + id);
     loadChecklist();
 }
 
@@ -233,6 +262,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     $$("[data-signout]").forEach(b => b.addEventListener("click", signOut));
     $("#tm-btn").addEventListener("click", recordContraction);
     $("#tm-reset").addEventListener("click", resetContractions);
+    $("#prep-add").addEventListener("click", () => addChecklistItem("prep", "#prep-new", "#prep-add"));
+    $("#day-add").addEventListener("click", () => addChecklistItem("day", "#day-new", "#day-add"));
 
     // すでに鍵があれば自動ログイン
     if (Token.get()) {

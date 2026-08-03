@@ -550,3 +550,19 @@ body {
     color: var(--accent-dark);
     border-color: var(--accent)
 }
+
+/* チェック項目右端の「×」削除ボタン */
+.chk .del {
+    margin-left: auto;
+    background: none;
+    border: none;
+    color: var(--hint);
+    font-size: 16px;
+    line-height: 1;
+    padding: 4px 6px;
+    cursor: pointer
+}
+
+.chk .del:hover {
+    color: var(--danger-dark)
+}
