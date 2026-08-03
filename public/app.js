@@ -75,11 +75,11 @@ function setupTabs() {
 
 // ===== チェックリスト（段取り・当日・手続き）=====
 async function loadChecklist() {
-    // APIは { prep:[...], day:[...], procedure:[...] } を返す
     const data = await api("GET", "/checklist_items");
     renderChecks("#prep-list", data.prep);
     renderChecks("#day-list", data.day);
     renderDoc("#doc-list", data.procedure);
+    renderGifts(data.gift);
 }
 
 // 段取り・当日：チェックボックス形式で描画（削除ボタン付き）
@@ -132,10 +132,122 @@ function renderDoc(sel, items) {
         () => toggleItem(el.dataset.id, !el.querySelector(".pill").classList.contains("g"))));
 }
 
+// ===== Push Gift 候補 =====
+let lastGiftItems = [];  // 直近取得した候補一覧（再描画に使う。APIを呼び直さないため）
+let editingGiftId = null; // 今インライン編集中の項目id（無ければnull）
+
+// 数字（円）を "¥10,000" の形に整形する
+function formatYen(v) {
+    const n = Number(v);
+    if (!v || Number.isNaN(n)) return "";
+    return "¥" + n.toLocaleString("ja-JP"); // 3桁ごとにカンマを入れる
+}
+
+// Push Gift候補を、価格・リンク・編集・削除・「本命」ボタン付きで描画する
+function renderGifts(items) {
+    lastGiftItems = items || [];
+    const el = $("#gift-list");
+    if (!el) return;
+
+    el.innerHTML = lastGiftItems.map(i => {
+        // 編集中の項目だけ、入力フォームに切り替えて表示する
+        if (String(i.id) === String(editingGiftId)) {
+            return `
+        <div class="card gift-card" data-id="${i.id}">
+          <div class="gift-form">
+            <input id="gedit-title-${i.id}" value="${esc(i.title)}" placeholder="商品名">
+            <input id="gedit-price-${i.id}" type="number" step="1" min="0" value="${esc(i.detail || "")}" placeholder="価格（円）">
+            <input id="gedit-url-${i.id}" value="${esc(i.url || "")}" placeholder="商品ページのURL">
+            <div class="row">
+              <button class="btn" data-save="${i.id}" style="width:auto; padding:0 14px; margin-top:0;">保存</button>
+              <button class="gift-choose" data-cancel="${i.id}">キャンセル</button>
+            </div>
+          </div>
+        </div>`;
+        }
+
+        // 通常表示
+        return `
+      <div class="card gift-card ${i.done ? "chosen" : ""}" data-id="${i.id}">
+        <div class="row">
+          <span class="t14">${esc(i.title)}</span>
+          ${i.done ? `<span class="pill g">本命</span>` : ""}
+        </div>
+        ${i.detail ? `<p class="gift-price">${formatYen(i.detail)}</p>` : ""}
+        ${i.url ? `<a class="meta-link" href="${esc(i.url)}" target="_blank" rel="noopener">🔗 商品ページ</a>` : ""}
+        <div class="row" style="margin-top:8px;">
+          <button class="gift-choose" data-choose="${i.id}" data-chosen="${i.done}">${i.done ? "本命を解除" : "本命に選ぶ"}</button>
+          <div style="display:flex; gap:6px;">
+            <button class="gift-choose" data-edit="${i.id}">編集</button>
+            <button class="del" data-del="${i.id}" title="削除">×</button>
+          </div>
+        </div>
+      </div>`;
+    }).join("") || `<div class="empty">まだ候補がありません</div>`;
+
+    // 「本命に選ぶ／解除」
+    $$("#gift-list [data-choose]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            const nowChosen = btn.dataset.chosen === "true";
+            toggleItem(btn.dataset.choose, !nowChosen);
+        });
+    });
+
+    // 「編集」：インライン編集モードに切り替える（再取得はせず、今のデータで再描画）
+    $$("#gift-list [data-edit]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            editingGiftId = btn.dataset.edit;
+            renderGifts(lastGiftItems);
+        });
+    });
+
+    // 「保存」：入力内容をAPIに送って更新し、一覧を再読み込み
+    $$("#gift-list [data-save]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const id = btn.dataset.save;
+            const title = $(`#gedit-title-${id}`).value.trim();
+            const price = $(`#gedit-price-${id}`).value.trim();
+            const url = $(`#gedit-url-${id}`).value.trim();
+            await api("PATCH", "/checklist_items/" + id, { title, detail: price, url });
+            editingGiftId = null;
+            loadChecklist();
+        });
+    });
+
+    // 「キャンセル」：APIは呼ばず、編集モードだけ解除
+    $$("#gift-list [data-cancel]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            editingGiftId = null;
+            renderGifts(lastGiftItems);
+        });
+    });
+
+    // ×ボタン：削除
+    $$("#gift-list .del").forEach(btn => {
+        btn.addEventListener("click", () => deleteItem(btn.dataset.del));
+    });
+}
+
+// 新しい候補を追加する
+async function addGift() {
+    const title = $("#gift-title").value.trim();
+    if (!title) return;
+    await api("POST", "/checklist_items", {
+        category: "gift",
+        title,
+        detail: $("#gift-price").value.trim(), // 生の数字（例: "10000"）をそのまま保存
+        url: $("#gift-url").value.trim(),
+    });
+    $("#gift-title").value = "";
+    $("#gift-price").value = "";
+    $("#gift-url").value = "";
+    loadChecklist();
+}
+
 // 完了トグル：APIに更新を送って、再読み込み
 async function toggleItem(id, done) {
     await api("PATCH", "/checklist_items/" + id, { done });
-    loadChecklist();
+    return loadChecklist();
 }
 
 // 項目を削除する。確認してからAPIにDELETEを送り、一覧を再読み込み
@@ -263,6 +375,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#tm-reset").addEventListener("click", resetContractions);
     $("#prep-add").addEventListener("click", () => addChecklistItem("prep", "#prep-new", "#prep-add"));
     $("#day-add").addEventListener("click", () => addChecklistItem("day", "#day-new", "#day-add"));
+    $("#gift-add").addEventListener("click", addGift);
 
     // すでに鍵があれば自動ログイン
     if (Token.get()) {
