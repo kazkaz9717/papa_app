@@ -17,10 +17,11 @@ Rails.application.routes.draw do
     post "login",  to: "auth#login"
     get  "me",     to: "auth#me"
     resources :checklist_items, only: %i[index create update destroy]
-    # 陣痛の記録：一覧・記録・取り消し
     # 陣痛の記録：一覧・記録・取り消し ＋ リセット
     resources :contraction_events, only: %i[index create destroy] do
       collection { delete :reset }
     end
+    # 育休・給付金ステップ：一覧・状態変更
+    resources :benefit_steps, only: %i[index update]
   end
 end

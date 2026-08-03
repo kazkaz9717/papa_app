@@ -3,9 +3,12 @@ class Household < ApplicationRecord
   has_many :checklist_items, dependent: :destroy
   # この家族の陣痛の記録（1つの家族が複数の記録を持つ）
   has_many :contraction_events, dependent: :destroy
+  # この家族の育休・給付金ステップ
+  has_many :benefit_steps, dependent: :destroy
 
   before_validation :ensure_invite_code, on: :create
   after_create :seed_default_checklist_items
+  after_create :seed_default_benefit_steps
 
   validates :name, presence: true
   validates :invite_code, presence: true, uniqueness: true
@@ -31,6 +34,22 @@ class Household < ApplicationRecord
     ]
   }.freeze
 
+  # 育休・給付金の初期ステップ（新規登録時に自動で入れる、案A：ひな形をコピー）
+  DEFAULT_BENEFIT_STEPS = [
+    { phase_label: "出産前", title: "育休を勤務先に申請",
+      description: "産後パパ育休は原則2週間前まで。給付は勤務先経由でハローワークへ",
+      timing_note: "出産前" },
+    { phase_label: "出生〜8週", title: "産後パパ育休を取得",
+      description: "出生後8週内に4週間分まで、2回に分割可",
+      timing_note: "今ここ" },
+    { phase_label: "約2〜3か月後", title: "給付金が初回入金",
+      description: "出生時育児休業給付金67%＋出生後休業支援給付13%＝計80%",
+      timing_note: "育休の約2〜3か月後" },
+    { phase_label: "181日目以降", title: "育児休業給付金へ移行",
+      description: "はじめ67%、181日目以降は50%。2か月ごとに支給",
+      timing_note: "181日目以降" }
+  ].freeze
+
   private
 
   def ensure_invite_code
@@ -45,6 +64,13 @@ class Household < ApplicationRecord
       items.each_with_index do |attrs, i|
         checklist_items.create!(attrs.merge(category: category, position: i))
       end
+    end
+  end
+
+  # 家族が作られた直後、育休・給付金の初期ステップをまとめて作る
+  def seed_default_benefit_steps
+    DEFAULT_BENEFIT_STEPS.each_with_index do |attrs, i|
+      benefit_steps.create!(attrs.merge(position: i, status: "todo"))
     end
   end
 end
