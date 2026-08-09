@@ -23,5 +23,6 @@ Rails.application.routes.draw do
     end
     # 育休・給付金ステップ：一覧・状態変更
     resources :benefit_steps, only: %i[index update]
+    resource :household, only: %i[show update], controller: "household"
   end
 end

@@ -59,8 +59,6 @@
                     <div class="hd">
                         <h2>🗒 妊娠後期・準備</h2>
                         <p class="sub">やること</p>
-                        <p class="sub" id="invite-info"></p>
-                        <button class="signout" data-signout>ログアウト</button>
                     </div>
                     <div class="body">
                         <div class="list" id="prep-list"></div>
@@ -142,6 +140,50 @@
                         <div class="empty">近日対応</div>
                     </div>
                 </section>
+                <section class="view" id="v-settings">
+                    <div class="hd">
+                        <h2>⚙️ 設定</h2>
+                        <p class="sub">アカウント・家族情報</p>
+                    </div>
+                    <div class="body">
+                        <p class="sec">ログイン中</p>
+                        <div class="card" id="me-card"></div>
+
+                        <p class="sec" style="margin-top:16px;">家族情報</p>
+                        <div class="card">
+                            <label
+                                style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">家族の名前</label>
+                            <input id="set-household-name"
+                                style="width:100%; height:38px; border:1px solid #d5d9d4; border-radius:9px; padding:0 10px; font-size:14px; margin-bottom:10px;">
+                            <label
+                                style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">出産予定日</label>
+                            <input id="set-due-on" type="date"
+                                style="width:100%; height:38px; border:1px solid #d5d9d4; border-radius:9px; padding:0 10px; font-size:14px; margin-bottom:10px;">
+                            <label
+                                style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">赤ちゃんの名前（決まっていれば）</label>
+                            <input id="set-baby-name"
+                                style="width:100%; height:38px; border:1px solid #d5d9d4; border-radius:9px; padding:0 10px; font-size:14px; margin-bottom:10px;">
+                            <button class="btn" id="set-save"
+                                style="width:auto; padding:0 16px; margin-top:0;">保存</button>
+                            <span id="set-saved-msg"
+                                style="font-size:12px; color:var(--accent-dark); margin-left:10px;"></span>
+                        </div>
+
+                        <p class="sec" style="margin-top:16px;">招待コード</p>
+                        <div class="card">
+                            <p style="margin:0 0 8px; font-size:20px; font-weight:600; letter-spacing:2px;"
+                                id="set-invite-code">------</p>
+                            <button class="gift-choose" id="set-copy-invite">コピー</button>
+                            <p class="meta">このコードをパートナーに伝えると、同じ家族グループに参加できます</p>
+                        </div>
+
+                        <p class="sec" style="margin-top:16px;">家族メンバー</p>
+                        <div class="list" id="set-members"></div>
+
+                        <button class="btn" data-signout
+                            style="background:var(--danger); margin-top:18px;">ログアウト</button>
+                    </div>
+                </section>
             </div>
             <nav class="tabs">
                 <button class="tab on" data-v="v-prep"><span class="ic">🗒</span>段取り</button>
@@ -149,6 +191,7 @@
                 <button class="tab" data-v="v-doc"><span class="ic">📄</span>手続き</button>
                 <button class="tab" data-v="v-money"><span class="ic">💰</span>お金</button>
                 <button class="tab" data-v="v-log"><span class="ic">📓</span>記録</button>
+                <button class="tab" data-v="v-settings"><span class="ic">⚙️</span>設定</button>
             </nav>
         </div>
     </div>

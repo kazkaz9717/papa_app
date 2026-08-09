@@ -65,9 +65,7 @@ async function submitAuth() {
 function enterApp() {
     $("#auth").hidden = true;
     $("#app").hidden = false;
-    if (ME?.household?.invite_code) {
-        $("#invite-info").textContent = `招待コード: ${ME.household.invite_code}（パートナーに伝えてください）`;
-    }
+    loadSettings();
     loadChecklist();
     loadContractions();
     loadBenefits();
@@ -359,6 +357,57 @@ function renderBenefits(steps) {
     });
 }
 
+// ---- 設定画面 ----
+const ROLE_LABELS = { husband: "夫", wife: "妻", other: "その他" };
+
+async function loadSettings() {
+    const h = await api("GET", "/household");
+    ME.household = h;
+
+    // ログイン中のアカウント
+    $("#me-card").innerHTML = `
+    <p style="margin:0 0 4px; font-weight:600;">${esc(ME.user.name)}（${ROLE_LABELS[ME.user.role] || ME.user.role}）</p>
+    <p class="meta" style="margin:0;">${esc(ME.user.email)}</p>
+  `;
+
+    // 家族情報フォームに現在値をセット
+    $("#set-household-name").value = h.name || "";
+    $("#set-due-on").value = h.due_on || "";
+    $("#set-baby-name").value = h.baby_name || "";
+
+    // 招待コード
+    $("#set-invite-code").textContent = h.invite_code || "------";
+
+    // 家族メンバー一覧
+    $("#set-members").innerHTML = h.members.map(m => `
+    <div class="card" style="margin-bottom:8px;">
+      <p style="margin:0;">${esc(m.name)}（${esc(m.role_label)}）</p>
+    </div>
+  `).join("");
+}
+
+async function saveHousehold() {
+    const body = {
+        name: $("#set-household-name").value,
+        due_on: $("#set-due-on").value || null,
+        baby_name: $("#set-baby-name").value
+    };
+    const h = await api("PATCH", "/household", body);
+    ME.household = h;
+    $("#set-saved-msg").textContent = "保存しました";
+    setTimeout(() => { $("#set-saved-msg").textContent = ""; }, 2000);
+}
+
+function copyInviteCode() {
+    const code = $("#set-invite-code").textContent;
+    navigator.clipboard.writeText(code).then(() => {
+        const btn = $("#set-copy-invite");
+        const original = btn.textContent;
+        btn.textContent = "コピーしました";
+        setTimeout(() => { btn.textContent = original; }, 1500);
+    });
+}
+
 // 時計と「前回からの経過」を毎秒更新する
 function two(n) { return (n < 10 ? "0" : "") + n; }
 setInterval(() => {
@@ -394,6 +443,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#prep-add").addEventListener("click", () => addChecklistItem("prep", "#prep-new", "#prep-add"));
     $("#day-add").addEventListener("click", () => addChecklistItem("day", "#day-new", "#day-add"));
     $("#gift-add").addEventListener("click", addGift);
+    $("#set-save").addEventListener("click", saveHousehold);
+    $("#set-copy-invite").addEventListener("click", copyInviteCode);
 
     // すでに鍵があれば自動ログイン
     if (Token.get()) {
