@@ -94,22 +94,29 @@ async function loadChecklist() {
 // 段取り・当日：チェックボックス形式で描画（削除ボタン付き）
 function renderChecks(sel, items) {
     $(sel).innerHTML = (items || []).map(i =>
-        `<div class="chk ${i.done ? "done" : ""}" data-id="${i.id}">
+        `<div class="chk ${i.done ? "done" : ""}" data-id="${i.id}" data-doneby="${esc(i.done_by || "")}">
        <span class="box">✓</span><span class="txt">${esc(i.title)}</span>
        ${i.done && i.done_by ? `<span class="by">${esc(i.done_by)}</span>` : ""}
        <button class="del" data-del="${i.id}" title="削除">×</button>
      </div>`).join("") || `<div class="empty">項目がありません</div>`;
 
-    // チェック部分（div自体）をクリックしたら完了・未完了を切り替え
     $$(`${sel} .chk`).forEach(el => el.addEventListener("click", (ev) => {
-        // ×ボタンが押されたときはチェック切り替えをしない（下のdeleteハンドラに任せる）
         if (ev.target.closest(".del")) return;
-        toggleItem(el.dataset.id, !el.classList.contains("done"));
+
+        const willDone = !el.classList.contains("done");
+        // 完了→未完了に戻す操作だけ、確認を挟む（相手の完了を誤って消さないため）
+        if (!willDone) {
+            const doneBy = el.dataset.doneby;
+            const msg = doneBy
+                ? `「${doneBy}」が完了にした項目です。未完了に戻しますか？`
+                : "この項目を未完了に戻しますか？";
+            if (!confirm(msg)) return;
+        }
+        toggleItem(el.dataset.id, willDone);
     }));
 
-    // ×ボタン：確認のうえ削除
     $$(`${sel} .del`).forEach(btn => btn.addEventListener("click", (ev) => {
-        ev.stopPropagation(); // 親のchkクリック（完了切り替え）に伝わらないようにする
+        ev.stopPropagation();
         deleteItem(btn.dataset.del);
     }));
 }
@@ -128,17 +135,30 @@ async function addChecklistItem(category, inputSel, buttonSel) {
 // 手続き：カード形式で描画（提出先・補足・公式リンクつき）
 function renderDoc(sel, items) {
     $(sel).innerHTML = (items || []).map(i =>
-        `<div class="card" data-id="${i.id}">
+        `<div class="card" data-id="${i.id}" data-doneby="${esc(i.done_by || "")}">
        <div class="row">
          <span class="t14 ${i.done ? "strike" : ""}">${esc(i.title)}</span>
          <span class="pill ${i.done ? "g" : "n"}">${i.done ? "完了" : "未"}</span>
        </div>
        ${i.place ? `<p class="meta">📍 ${esc(i.place)}</p>` : ""}
        ${i.detail ? `<p class="meta">${esc(i.detail)}</p>` : ""}
-       ${i.url ? `<a class="meta-link" href="${esc(i.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 詳しく見る（公式サイト）</a>` : ""}
+       <div class="row" style="margin-top:8px; align-items:center;">
+         ${i.url ? `<a class="meta-link" href="${esc(i.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 詳しく見る（公式サイト）</a>` : "<span></span>"}
+         ${i.done && i.done_by ? `<span class="meta" style="margin:0 0 0 auto;">✅ ${esc(i.done_by)}が完了</span>` : ""}
+       </div>
      </div>`).join("") || `<div class="empty">項目がありません</div>`;
-    $$(`${sel} .card`).forEach(el => el.addEventListener("click",
-        () => toggleItem(el.dataset.id, !el.querySelector(".pill").classList.contains("g"))));
+
+    $$(`${sel} .card`).forEach(el => el.addEventListener("click", () => {
+        const willDone = !el.querySelector(".pill").classList.contains("g");
+        if (!willDone) {
+            const doneBy = el.dataset.doneby;
+            const msg = doneBy
+                ? `「${doneBy}」が完了にした項目です。未完了に戻しますか？`
+                : "この項目を未完了に戻しますか？";
+            if (!confirm(msg)) return;
+        }
+        toggleItem(el.dataset.id, willDone);
+    }));
 }
 
 // ===== Push Gift 候補 =====
