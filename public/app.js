@@ -138,7 +138,10 @@ function renderDoc(sel, items) {
         `<div class="card" data-id="${i.id}" data-doneby="${esc(i.done_by || "")}">
        <div class="row">
          <span class="t14 ${i.done ? "strike" : ""}">${esc(i.title)}</span>
-         <span class="pill ${i.done ? "g" : "n"}">${i.done ? "完了" : "未"}</span>
+         <div style="display:flex; align-items:center; gap:6px;">
+           <span class="pill ${i.done ? "g" : "n"}">${i.done ? "完了" : "未"}</span>
+           <button class="del" data-del="${i.id}" title="削除">×</button>
+         </div>
        </div>
        ${i.place ? `<p class="meta">📍 ${esc(i.place)}</p>` : ""}
        ${i.detail ? `<p class="meta">${esc(i.detail)}</p>` : ""}
@@ -148,7 +151,8 @@ function renderDoc(sel, items) {
        </div>
      </div>`).join("") || `<div class="empty">項目がありません</div>`;
 
-    $$(`${sel} .card`).forEach(el => el.addEventListener("click", () => {
+    $$(`${sel} .card`).forEach(el => el.addEventListener("click", (ev) => {
+        if (ev.target.closest(".del")) return; // ×ボタンのクリックは完了トグルに流さない
         const willDone = !el.querySelector(".pill").classList.contains("g");
         if (!willDone) {
             const doneBy = el.dataset.doneby;
@@ -158,6 +162,11 @@ function renderDoc(sel, items) {
             if (!confirm(msg)) return;
         }
         toggleItem(el.dataset.id, willDone);
+    }));
+
+    $$(`${sel} .del`).forEach(btn => btn.addEventListener("click", (ev) => {
+        ev.stopPropagation();
+        deleteItem(btn.dataset.del);
     }));
 }
 
@@ -462,6 +471,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#tm-reset").addEventListener("click", resetContractions);
     $("#prep-add").addEventListener("click", () => addChecklistItem("prep", "#prep-new", "#prep-add"));
     $("#day-add").addEventListener("click", () => addChecklistItem("day", "#day-new", "#day-add"));
+    $("#doc-add").addEventListener("click", () => addChecklistItem("procedure", "#doc-new", "#doc-add"));
     $("#gift-add").addEventListener("click", addGift);
     $("#set-save").addEventListener("click", saveHousehold);
     $("#set-copy-invite").addEventListener("click", copyInviteCode);
