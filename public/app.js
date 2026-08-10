@@ -209,16 +209,16 @@ function renderGifts(items) {
       <div class="card gift-card ${i.done ? "chosen" : ""}" data-id="${i.id}">
         <div class="row">
           <span class="t14">${esc(i.title)}</span>
-          ${i.done ? `<span class="pill g">本命</span>` : ""}
+          <div style="display:flex; align-items:center; gap:6px;">
+            ${i.done ? `<span class="pill g">本命</span>` : ""}
+            <button class="del" data-del="${i.id}" title="削除">×</button>
+          </div>
         </div>
         ${i.detail ? `<p class="gift-price">${formatYen(i.detail)}</p>` : ""}
         ${i.url ? `<a class="meta-link" href="${esc(i.url)}" target="_blank" rel="noopener">🔗 商品ページ</a>` : ""}
         <div class="row" style="margin-top:8px;">
           <button class="gift-choose" data-choose="${i.id}" data-chosen="${i.done}">${i.done ? "本命を解除" : "本命に選ぶ"}</button>
-          <div style="display:flex; gap:6px;">
-            <button class="gift-choose" data-edit="${i.id}">編集</button>
-            <button class="del" data-del="${i.id}" title="削除">×</button>
-          </div>
+          <button class="gift-choose" data-edit="${i.id}">編集</button>
         </div>
       </div>`;
     }).join("") || `<div class="empty">まだ候補がありません</div>`;
@@ -262,7 +262,10 @@ function renderGifts(items) {
 
     // ×ボタン：削除
     $$("#gift-list .del").forEach(btn => {
-        btn.addEventListener("click", () => deleteItem(btn.dataset.del));
+        btn.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            deleteItem(btn.dataset.del);
+        });
     });
 }
 

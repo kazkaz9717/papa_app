@@ -537,27 +537,31 @@ body {
     cursor: pointer
 }
 
-/* 今選ばれている状態のボタンだけ緑系でハイライト */
-.tl .btns button.on {
-    background: var(--accent-bg);
-    color: var(--accent-dark);
-    border-color: var(--accent)
-}
-
-/* チェック項目右端の「×」削除ボタン */
-.chk .del {
-    margin-left: auto;
+/* 削除ボタン：丸型に統一（段取り・当日・手続き・Push Gift共通） */
+.del {
+    width: 24px;
+    height: 24px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
     background: none;
-    border: none;
+    border: 1px solid var(--line);
+    border-radius: 50%;
     color: var(--hint);
-    font-size: 16px;
+    font-size: 14px;
     line-height: 1;
-    padding: 4px 6px;
+    padding: 0;
     cursor: pointer
 }
 
-.chk .del:hover {
-    color: var(--danger-dark)
+.del:hover {
+    color: var(--danger-dark);
+    border-color: var(--danger-dark)
+}
+
+/* 段取り・当日の行の中だけ、右端に寄せる */
+.chk .del {
+    margin-left: auto
 }
 
 /* 「詳しく見る（公式サイト）」の外部リンク */
