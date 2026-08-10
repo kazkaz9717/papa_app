@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_03_092247) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_09_061403) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -42,6 +42,8 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_03_092247) do
     t.bigint "done_by_id"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "created_by_id"
+    t.index ["created_by_id"], name: "index_checklist_items_on_created_by_id"
     t.index ["done_by_id"], name: "index_checklist_items_on_done_by_id"
     t.index ["household_id", "category", "position"], name: "idx_on_household_id_category_position_00487edb03"
     t.index ["household_id"], name: "index_checklist_items_on_household_id"
@@ -85,6 +87,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_03_092247) do
 
   add_foreign_key "benefit_steps", "households"
   add_foreign_key "checklist_items", "households"
+  add_foreign_key "checklist_items", "users", column: "created_by_id"
   add_foreign_key "checklist_items", "users", column: "done_by_id"
   add_foreign_key "contraction_events", "households"
   add_foreign_key "contraction_events", "users", column: "recorded_by_id"

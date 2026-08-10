@@ -4,7 +4,9 @@ module Api
     def index
       items = current_household.checklist_items.ordered
       grouped = ChecklistItem::CATEGORIES.index_with do |category|
-        items.select { |i| i.category == category }.map { |i| item_json(i) }
+        scoped = items.select { |i| i.category == category }
+        scoped = scoped.select { |i| i.created_by_id == current_user.id } if category == "gift"
+        scoped.map { |i| item_json(i) }
       end
       render json: grouped
     end
@@ -13,7 +15,7 @@ module Api
     def create
       attrs = item_params
       item = current_household.checklist_items.create!(
-        attrs.merge(position: next_position(attrs[:category]))
+        attrs.merge(position: next_position(attrs[:category]), created_by: current_user)
       )
       render json: item_json(item), status: :created
     rescue ActiveRecord::RecordInvalid => e
@@ -22,7 +24,7 @@ module Api
 
     # 更新（完了トグルや編集）
     def update
-      item = current_household.checklist_items.find(params[:id])
+      item = find_own_item(params[:id])
       attrs = update_params
       attrs[:done_by] = attrs[:done] ? current_user : nil if attrs.key?(:done)
       item.update!(attrs)
@@ -31,16 +33,17 @@ module Api
       render json: { error: e.record.errors.full_messages.join("、") }, status: :unprocessable_entity
     end
 
-    # 削除（DELETE 1件）
     def destroy
-      current_household.checklist_items.find(params[:id]).destroy!
+      find_own_item(params[:id]).destroy!
       head :no_content
     end
 
     private
 
-    def item_params
-      params.permit(:category, :title, :detail, :place, :url, :due_on).to_h.symbolize_keys
+    def find_own_item(id)
+      item = current_household.checklist_items.find(id)
+      raise ActiveRecord::RecordNotFound if item.category == "gift" && item.created_by_id != current_user.id
+      item
     end
 
     def update_params
