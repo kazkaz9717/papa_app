@@ -196,12 +196,12 @@ body {
    ========================================================================== */
 
 /* チェック項目を並べる白いカードの外枠 */
-.list {
+/* .list {
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 12px;
     overflow: hidden
-}
+} */
 
 /* チェック項目1行分（タップで完了/未完了を切り替える） */
 .chk {
@@ -647,4 +647,23 @@ body {
     border-color: var(--accent);
     color: var(--accent-dark);
     background: var(--accent-bg);
+}
+
+/* Push Gift：非公開であることを示す注記（見出しの横に小さく表示） */
+.privacy-note {
+    display: inline-block;
+    margin: 0;
+    padding: 3px 8px;
+    font-size: 11px;
+    color: var(--accent-dark);
+    background: var(--accent-bg);
+    border-radius: 999px;
+}
+
+/* Push Gift見出しと「非公開」バッジを横並びにする */
+.gift-heading {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 36px;
 }
