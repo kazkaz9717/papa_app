@@ -165,7 +165,7 @@ function renderGifts(items) {
         <div class="card gift-card" data-id="${i.id}">
           <div class="gift-form">
             <input id="gedit-title-${i.id}" value="${esc(i.title)}" placeholder="商品名">
-            <input id="gedit-price-${i.id}" type="number" step="1" min="0" value="${esc(i.detail || "")}" placeholder="価格（円）">
+            <input id="gedit-price-${i.id}" type="text" inputmode="numeric" pattern="[0-9]*" value="${esc(i.detail || "")}" placeholder="価格（円）">
             <input id="gedit-url-${i.id}" value="${esc(i.url || "")}" placeholder="商品ページのURL">
             <div class="row">
               <button class="btn" data-save="${i.id}" style="width:auto; padding:0 14px; margin-top:0;">保存</button>
@@ -215,7 +215,7 @@ function renderGifts(items) {
         btn.addEventListener("click", async () => {
             const id = btn.dataset.save;
             const title = $(`#gedit-title-${id}`).value.trim();
-            const price = $(`#gedit-price-${id}`).value.trim();
+            const price = $(`#gedit-price-${id}`).value.replace(/[^0-9]/g, "");
             const url = $(`#gedit-url-${id}`).value.trim();
             await api("PATCH", "/checklist_items/" + id, { title, detail: price, url });
             editingGiftId = null;
@@ -244,7 +244,7 @@ async function addGift() {
     await api("POST", "/checklist_items", {
         category: "gift",
         title,
-        detail: $("#gift-price").value.trim(), // 生の数字（例: "10000"）をそのまま保存
+        detail: $("#gift-price").value.replace(/[^0-9]/g, ""),
         url: $("#gift-url").value.trim(),
     });
     $("#gift-title").value = "";

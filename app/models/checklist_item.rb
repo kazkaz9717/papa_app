@@ -3,6 +3,7 @@ class ChecklistItem < ApplicationRecord
 
   belongs_to :household
   belongs_to :done_by, class_name: "User", optional: true
+  belongs_to :created_by, class_name: "User", optional: true
 
   validates :category, inclusion: { in: CATEGORIES }
   validates :title, presence: true

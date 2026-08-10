@@ -40,6 +40,10 @@ module Api
 
     private
 
+    def item_params
+      params.permit(:category, :title, :detail, :place, :url, :due_on).to_h.symbolize_keys
+    end
+
     def find_own_item(id)
       item = current_household.checklist_items.find(id)
       raise ActiveRecord::RecordNotFound if item.category == "gift" && item.created_by_id != current_user.id
