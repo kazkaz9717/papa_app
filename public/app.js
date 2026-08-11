@@ -153,14 +153,17 @@ function renderDoc(sel, items) {
 
     $$(`${sel} .card`).forEach(el => el.addEventListener("click", (ev) => {
         if (ev.target.closest(".del")) return; // ×ボタンのクリックは完了トグルに流さない
+
         const willDone = !el.querySelector(".pill").classList.contains("g");
-        if (!willDone) {
-            const doneBy = el.dataset.doneby;
-            const msg = doneBy
+        const doneBy = el.dataset.doneby;
+
+        const msg = willDone
+            ? "この項目を完了にしますか？"
+            : (doneBy
                 ? `「${doneBy}」が完了にした項目です。未完了に戻しますか？`
-                : "この項目を未完了に戻しますか？";
-            if (!confirm(msg)) return;
-        }
+                : "この項目を未完了に戻しますか？");
+
+        if (!confirm(msg)) return;
         toggleItem(el.dataset.id, willDone);
     }));
 
@@ -366,7 +369,6 @@ function renderBenefits(steps) {
         const buttons = ["todo", "doing", "done"].map(st =>
             `<button data-step="${s.id}" data-status="${st}" class="${s.status === st ? "on" : ""}">${labels[st]}</button>`
         ).join("");
-        // 公式リンクがあれば「詳しく見る」を表示
         const link = s.url ? `<a class="meta-link" href="${esc(s.url)}" target="_blank" rel="noopener">🔗 詳しく見る（公式サイト）</a>` : "";
 
         return `<div class="tl">
@@ -376,17 +378,30 @@ function renderBenefits(steps) {
         <p class="ti">${esc(s.title)}</p>
         <p class="tx">${esc(s.description)}</p>
         <div class="btns">${buttons}</div>
-        ${link}
+        <div class="row" style="margin-top:6px; align-items:center;">
+          ${link || "<span></span>"}
+          ${s.updated_by ? `<span class="meta" style="margin:0 0 0 auto;">✅ ${esc(s.updated_by)}が最終更新</span>` : ""}
+        </div>
       </div>
     </div>`;
     }).join("");
 
     $$("#money-list [data-step]").forEach(btn => {
         btn.addEventListener("click", async () => {
+            const label = labels[btn.dataset.status];
+            if (!confirm(`ステータスを「${label}」に変更しますか？`)) return;
             await api("PATCH", "/benefit_steps/" + btn.dataset.step, { status: btn.dataset.status });
             loadBenefits();
         });
     });
+}
+
+async function addBenefitStep() {
+    const title = $("#money-new").value.trim();
+    if (!title) return;
+    await api("POST", "/benefit_steps", { title });
+    $("#money-new").value = "";
+    loadBenefits();
 }
 
 // ---- 設定画面 ----
@@ -475,6 +490,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#prep-add").addEventListener("click", () => addChecklistItem("prep", "#prep-new", "#prep-add"));
     $("#day-add").addEventListener("click", () => addChecklistItem("day", "#day-new", "#day-add"));
     $("#doc-add").addEventListener("click", () => addChecklistItem("procedure", "#doc-new", "#doc-add"));
+    $("#money-add").addEventListener("click", addBenefitStep);
     $("#gift-add").addEventListener("click", addGift);
     $("#set-save").addEventListener("click", saveHousehold);
     $("#set-copy-invite").addEventListener("click", copyInviteCode);

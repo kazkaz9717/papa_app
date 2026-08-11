@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_09_061403) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_10_063051) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -25,8 +25,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_09_061403) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.string "url"
+    t.bigint "updated_by_id"
     t.index ["household_id", "position"], name: "index_benefit_steps_on_household_id_and_position"
     t.index ["household_id"], name: "index_benefit_steps_on_household_id"
+    t.index ["updated_by_id"], name: "index_benefit_steps_on_updated_by_id"
   end
 
   create_table "checklist_items", force: :cascade do |t|
@@ -86,6 +88,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_09_061403) do
   end
 
   add_foreign_key "benefit_steps", "households"
+  add_foreign_key "benefit_steps", "users", column: "updated_by_id"
   add_foreign_key "checklist_items", "households"
   add_foreign_key "checklist_items", "users", column: "created_by_id"
   add_foreign_key "checklist_items", "users", column: "done_by_id"

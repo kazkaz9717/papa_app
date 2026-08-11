@@ -537,6 +537,24 @@ body {
     cursor: pointer
 }
 
+/* 選択中のボタンだけ、状態に応じた色で塗りつぶす */
+.tl .btns button.on {
+    color: #fff;
+    border-color: transparent
+}
+
+.tl .btns button[data-status="todo"].on {
+    background: var(--muted)
+}
+
+.tl .btns button[data-status="doing"].on {
+    background: var(--danger-dark)
+}
+
+.tl .btns button[data-status="done"].on {
+    background: var(--accent-dark)
+}
+
 /* 削除ボタン：丸型に統一（段取り・当日・手続き・Push Gift共通） */
 .del {
     width: 24px;
