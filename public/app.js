@@ -490,7 +490,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#prep-add").addEventListener("click", () => addChecklistItem("prep", "#prep-new", "#prep-add"));
     $("#day-add").addEventListener("click", () => addChecklistItem("day", "#day-new", "#day-add"));
     $("#doc-add").addEventListener("click", () => addChecklistItem("procedure", "#doc-new", "#doc-add"));
-    $("#money-add").addEventListener("click", addBenefitStep);
     $("#gift-add").addEventListener("click", addGift);
     $("#set-save").addEventListener("click", saveHousehold);
     $("#set-copy-invite").addEventListener("click", copyInviteCode);
