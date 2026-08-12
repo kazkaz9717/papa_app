@@ -4,15 +4,17 @@ module Api
 
     def signup
       ActiveRecord::Base.transaction do
+        is_new_household = params[:invite_code].blank?
         household =
-          if params[:invite_code].present?
-            Household.find_by!(invite_code: params[:invite_code].to_s.strip.upcase)
-          else
+          if is_new_household
             Household.create!(name: params[:household_name].presence || "わたしの家族", due_on: params[:due_on].presence)
+          else
+            Household.find_by!(invite_code: params[:invite_code].to_s.strip.upcase)
           end
         user = household.users.create!(
           name: params[:name], email: params[:email],
-          password: params[:password], role: params[:role].presence || "husband"
+          password: params[:password], role: params[:role].presence || "husband",
+          owner: is_new_household
         )
         render json: payload(user), status: :created
       end
@@ -40,7 +42,7 @@ module Api
     def payload(user)
       {
         token: user.api_token,
-        user: { id: user.id, name: user.name, email: user.email, role: user.role },
+        user: { id: user.id, name: user.name, email: user.email, role: user.role, owner: user.owner },
         household: household_json(user.household)
       }
     end

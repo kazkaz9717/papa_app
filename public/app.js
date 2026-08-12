@@ -459,18 +459,48 @@ async function loadSettings() {
     $("#set-due-on").value = h.due_on || "";
     $("#set-baby-name").value = h.baby_name || "";
 
-    // 招待コード
+    // 招待コード（再発行ボタンはオーナーだけに表示）
     $("#set-invite-code").textContent = h.invite_code || "------";
+    $("#set-regenerate-invite").hidden = !ME.user.owner;
 
-    // 家族メンバー一覧
+    // 家族メンバー一覧（オーナーだけ、自分以外に削除ボタンを表示）
     $("#set-members").innerHTML = h.members.map(m => `
-    <div class="card" style="margin-bottom:8px;">
-      <p style="margin:0;">${esc(m.name)}（${esc(m.role_label)}）</p>
+    <div class="card" style="margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
+      <p style="margin:0;">${esc(m.name)}（${esc(m.role_label)}）${m.owner ? "👑" : ""}</p>
+      ${ME.user.owner && m.id !== ME.user.id ? `<button class="del" data-remove-member="${m.id}" title="削除">×</button>` : ""}
     </div>
   `).join("");
 
+    $$("#set-members [data-remove-member]").forEach(btn => {
+        btn.addEventListener("click", () => removeMember(btn.dataset.removeMember));
+    });
+
     renderDueCountdown();
 }
+
+// メンバーを削除する（オーナーのみ、確認ダイアログあり）
+async function removeMember(id) {
+    if (!confirm("このメンバーを家族グループから削除しますか？取り消せません。")) return;
+    try {
+        await api("DELETE", "/household/members/" + id);
+        loadSettings();
+    } catch (e) {
+        alert(e.message);
+    }
+}
+
+// 招待コードを再発行する（オーナーのみ、確認ダイアログあり）
+async function regenerateInviteCode() {
+    if (!confirm("招待コードを再発行しますか？古いコードは使えなくなります。")) return;
+    try {
+        await api("POST", "/household/regenerate_invite_code");
+        loadSettings();
+    } catch (e) {
+        alert(e.message);
+    }
+}
+
+
 
 async function saveHousehold() {
     const body = {
@@ -533,6 +563,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#gift-add").addEventListener("click", addGift);
     $("#set-save").addEventListener("click", saveHousehold);
     $("#set-copy-invite").addEventListener("click", copyInviteCode);
+    $("#set-regenerate-invite").addEventListener("click", regenerateInviteCode);
 
     // すでに鍵があれば自動ログイン
     if (Token.get()) {

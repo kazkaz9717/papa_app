@@ -24,5 +24,7 @@ Rails.application.routes.draw do
     # 育休・給付金ステップ：一覧・状態変更
     resources :benefit_steps, only: %i[index update]
     resource :household, only: %i[show update], controller: "household"
+    delete "household/members/:id", to: "household#remove_member"
+    post "household/regenerate_invite_code", to: "household#regenerate_invite_code"
   end
 end

@@ -59,13 +59,22 @@ class Household < ApplicationRecord
       url: "https://www.hellowork.mhlw.go.jp/insurance/insurance_childcareleave.html" }
   ].freeze
 
+  # オーナーが招待コードを再発行する（古いコードは無効になる）
+  def regenerate_invite_code!
+    update!(invite_code: generate_invite_code)
+  end
+
   private
 
-  def ensure_invite_code
-    self.invite_code ||= loop do
+  def generate_invite_code
+    loop do
       code = SecureRandom.alphanumeric(6).upcase
       break code unless Household.exists?(invite_code: code)
     end
+  end
+
+  def ensure_invite_code
+    self.invite_code ||= generate_invite_code
   end
 
   def seed_default_checklist_items

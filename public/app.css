@@ -361,7 +361,18 @@ body {
 
 /* 今選ばれているタブだけアクセントカラーにする */
 .tab.on {
-    color: var(--accent)
+    color: var(--accent);
+    font-weight: 600
+}
+
+.tab.on .ic {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 24px;
+    background: var(--accent-bg);
+    border-radius: 12px
 }
 
 

@@ -1,18 +1,42 @@
 module Api
   class HouseholdController < BaseController
-    # GET /api/household
-    # 家族の基本情報＋メンバー一覧（誰が夫/妻として参加しているか）を返す
     def show
       render json: household_json(current_household)
     end
 
-    # PATCH /api/household
-    # 家族の名前・出産予定日・赤ちゃんの名前を更新する
     def update
       current_household.update!(household_params)
       render json: household_json(current_household)
     rescue ActiveRecord::RecordInvalid => e
       render json: { error: e.record.errors.full_messages.join("、") }, status: :unprocessable_entity
+    end
+
+    # 家族を作成した人（オーナー）だけが、他のメンバーを削除できる
+    def remove_member
+      unless current_user.owner?
+        render json: { error: "家族を作成した人だけがメンバーを削除できます" }, status: :forbidden
+        return
+      end
+
+      member = current_household.users.find(params[:id])
+      if member == current_user
+        render json: { error: "自分自身は削除できません" }, status: :unprocessable_entity
+        return
+      end
+
+      member.destroy!
+      render json: household_json(current_household)
+    end
+
+    # オーナーだけが、招待コードを再発行できる（古いコードは使えなくなる）
+    def regenerate_invite_code
+      unless current_user.owner?
+        render json: { error: "家族を作成した人だけが招待コードを再発行できます" }, status: :forbidden
+        return
+      end
+
+      current_household.regenerate_invite_code!
+      render json: household_json(current_household)
     end
 
     private
@@ -29,7 +53,7 @@ module Api
         birth_on: household.birth_on,
         baby_name: household.baby_name,
         invite_code: household.invite_code,
-        members: household.users.map { |u| { name: u.name, role: u.role, role_label: u.role_label } }
+        members: household.users.map { |u| { id: u.id, name: u.name, role: u.role, role_label: u.role_label, owner: u.owner } }
       }
     end
   end
