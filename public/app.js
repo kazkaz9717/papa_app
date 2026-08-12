@@ -100,7 +100,7 @@ function renderDueCountdown() {
     if (alertEl) {
         if (diffDays >= 0 && diffDays <= 7) {
             alertEl.hidden = false;
-            alertEl.textContent = "⚠ 予定日まで1週間を切りました。入院バッグや連絡先の最終確認を";
+            alertEl.innerHTML = `<strong>⚠ 予定日まで1週間を切りました</strong><br>入院バッグや連絡先の最終確認を`;
         } else {
             alertEl.hidden = true;
         }

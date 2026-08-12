@@ -434,7 +434,8 @@ body {
     border-radius: 11px;
     padding: 11px;
     font-size: 12px;
-    margin: 10px 0
+    margin: 10px 0;
+    text-align: center
 }
 
 /* 通常時：グレーの落ち着いた見た目 */
