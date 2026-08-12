@@ -56,11 +56,16 @@
             <div class="screen">
                 <!-- 段取り -->
                 <section class="view active" id="v-prep">
-                    <div class="hd">
-                        <h2>🗒 妊娠後期・準備</h2>
-                        <p class="sub">やること</p>
+                    <div class="hd" style="display:flex; align-items:center; justify-content:space-between;">
+                        <div>
+                            <h2>🗒 出産前準備</h2>
+                            <p class="sub">事前準備リスト・Push Gift候補</p>
+                        </div>
+                        <p class="due-countdown" id="due-countdown" style="margin:0;"></p>
                     </div>
+
                     <div class="body">
+                        <p class="sec" style="margin:0;">事前準備</p>
                         <div class="list" id="prep-list"></div>
                         <div class="row" style="margin-top:10px;">
                             <input id="prep-new" placeholder="新しい項目を入力">
@@ -70,7 +75,7 @@
 
                         <div class="gift-heading">
                             <p class="sec" style="margin:0;">🎁 Push Gift 候補</p>
-                            <span class="privacy-note">※パートナーには見えません</span>
+                            <span class="privacy-note">※パートナーには共有されません</span>
                         </div>
                         <div id="gift-list"></div>
                         <div class="gift-form">
@@ -84,9 +89,12 @@
                 </section>
                 <!-- 当日（陣痛タイマーは次で動かします）-->
                 <section class="view" id="v-day">
-                    <div class="hd">
-                        <h2>⏱ 陣痛モード</h2>
-                        <p class="sub" id="clock">--:--</p>
+                    <div class="hd" style="display:flex; align-items:center; justify-content:space-between;">
+                        <div>
+                            <h2>⏱ 当日やること</h2>
+                            <p class="sub">陣痛モード・当日やることリスト</p>
+                        </div>
+                        <p class="sub" id="clock" style="margin:0;">--:--</p>
                     </div>
                     <div class="body">
                         <div class="timer">
@@ -134,9 +142,7 @@
                 <section class="view" id="v-money">
                     <div class="hd">
                         <h2>💰 育休・給付金</h2>
-                        <p class="sub" style="margin-top:8px;">産後8週の28日間は</p>
-                        <p style="margin:2px 0 0; font-size:20px; font-weight:600; color:var(--accent);">手取り 実質10割</p>
-                        <p style="margin:3px 0 0; font-size:11px; color:var(--hint);">夫婦とも14日以上の育休が条件</p>
+                        <p class="sub">給付金手続き進行状況確認</p>
                     </div>
                     <div class="body" id="money-list"></div>
                 </section>

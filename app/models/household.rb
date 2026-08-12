@@ -49,7 +49,7 @@ class Household < ApplicationRecord
       description: "産後パパ育休は原則2週間前まで。給付は勤務先経由でハローワークへ", timing_note: "出産前",
       url: "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000135090_00001.html" },
     { phase_label: "出生〜8週", title: "産後パパ育休を取得",
-      description: "出生後8週内に4週間分まで、2回に分割可", timing_note: "今ここ",
+      description: "出生後8週内に4週間分まで、2回に分割可", timing_note: "出生後8週以内",
       url: "https://www.mhlw.go.jp/stf/seisakunitsuite/bunya/0000135090_00001.html" },
     { phase_label: "約2〜3か月後", title: "給付金が初回入金",
       description: "出生時育児休業給付金67％＋出生後休業支援給付13％＝計80％", timing_note: "育休の約2〜3か月後",

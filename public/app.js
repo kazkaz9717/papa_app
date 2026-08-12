@@ -65,12 +65,49 @@ async function submitAuth() {
 function enterApp() {
     $("#auth").hidden = true;
     $("#app").hidden = false;
+    renderDueCountdown();
     loadSettings();
     loadChecklist();
     loadContractions();
     loadBenefits();
 }
 function signOut() { Token.set(null); location.reload(); }
+
+// 出産予定日までのカウントダウンと、1週間以内の注意バナーを表示する
+function renderDueCountdown() {
+    const countdownEl = $("#due-countdown");
+    const alertEl = $("#due-alert");
+    const dueOn = ME?.household?.due_on;
+
+    if (!dueOn) {
+        if (countdownEl) countdownEl.textContent = "";
+        if (alertEl) alertEl.hidden = true;
+        return;
+    }
+
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    const due = new Date(dueOn); due.setHours(0, 0, 0, 0);
+    const diffDays = Math.round((due - today) / (1000 * 60 * 60 * 24));
+
+    if (countdownEl) {
+        countdownEl.textContent = diffDays > 0
+            ? `📅 出産予定日まであと${diffDays}日`
+            : diffDays === 0
+                ? "📅 本日が出産予定日です"
+                : `📅 出産予定日から${Math.abs(diffDays)}日経過`;
+    }
+
+    if (alertEl) {
+        if (diffDays >= 0 && diffDays <= 7) {
+            alertEl.hidden = false;
+            alertEl.textContent = "⚠ 予定日まで1週間を切りました。入院バッグや連絡先の最終確認を";
+        } else {
+            alertEl.hidden = true;
+        }
+    }
+}
+
+
 
 // ===== タブ切り替え =====
 function setupTabs() {
@@ -431,6 +468,8 @@ async function loadSettings() {
       <p style="margin:0;">${esc(m.name)}（${esc(m.role_label)}）</p>
     </div>
   `).join("");
+
+    renderDueCountdown();
 }
 
 async function saveHousehold() {
@@ -441,6 +480,7 @@ async function saveHousehold() {
     };
     const h = await api("PATCH", "/household", body);
     ME.household = h;
+    renderDueCountdown();
     $("#set-saved-msg").textContent = "保存しました";
     setTimeout(() => { $("#set-saved-msg").textContent = ""; }, 2000);
 }
