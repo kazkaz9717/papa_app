@@ -707,6 +707,14 @@ body {
 
 /* メディアクエリ */
 @media (max-width: 480px) {
+
+    html,
+    body {
+        height: 100%;
+        overflow: hidden;
+        overscroll-behavior: none;
+    }
+
     body {
         padding: 0;
     }
