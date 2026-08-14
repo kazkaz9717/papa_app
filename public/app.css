@@ -716,15 +716,14 @@ body {
     }
 
     body {
-        padding: 6px;
-        padding-bottom: calc(6px + env(safe-area-inset-bottom));
+        padding: 0;
     }
 
     .phone {
         width: 100%;
-        height: calc(100dvh - 12px - env(safe-area-inset-bottom));
+        height: 100dvh;
         border: none;
-        border-radius: 22px;
+        border-radius: 0;
         box-shadow: none;
     }
 
@@ -733,7 +732,7 @@ body {
     }
 
     .tabs {
-        padding-bottom: 6px;
+        padding-bottom: calc(6px + env(safe-area-inset-bottom));
     }
 
     .body {
