@@ -433,14 +433,6 @@ function renderBenefits(steps) {
     });
 }
 
-async function addBenefitStep() {
-    const title = $("#money-new").value.trim();
-    if (!title) return;
-    await api("POST", "/benefit_steps", { title });
-    $("#money-new").value = "";
-    loadBenefits();
-}
-
 // ---- 設定画面 ----
 const ROLE_LABELS = { husband: "夫", wife: "妻", other: "その他" };
 
@@ -535,6 +527,31 @@ setInterval(() => {
         $("#tm-main").textContent = two(Math.floor(s / 60)) + ":" + two(s % 60);
     }
 }, 1000);
+
+let scrollBeforeAnyFocus = null;
+
+document.addEventListener("focusin", (e) => {
+    if (e.target.matches("input, textarea")) {
+        const screen = e.target.closest(".screen");
+        if (screen && scrollBeforeAnyFocus === null) {
+            scrollBeforeAnyFocus = screen.scrollTop;
+        }
+    }
+});
+
+document.addEventListener("focusout", (e) => {
+    if (e.target.matches("input, textarea")) {
+        const screen = e.target.closest(".screen");
+        setTimeout(() => {
+            const active = document.activeElement;
+            const stillInInput = active && active.matches("input, textarea");
+            if (!stillInInput && scrollBeforeAnyFocus !== null && screen) {
+                screen.scrollTop = scrollBeforeAnyFocus;
+                scrollBeforeAnyFocus = null;
+            }
+        }, 50);
+    }
+});
 
 // ===== 起動時の処理 =====
 document.addEventListener("DOMContentLoaded", async () => {
