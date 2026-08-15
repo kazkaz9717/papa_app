@@ -73,12 +73,12 @@
                         <div class="row" style="margin-top:10px;">
                             <input id="prep-new" placeholder="新しい項目を入力">
                             <button class="btn" id="prep-add"
-                                style="width:auto; padding:0 16px; margin-top:0;">追加</button>
+                                style="width:auto; padding:0 18px; margin-top:0; background:var(--accent); color:#fff;">追加</button>
                         </div>
 
                         <div class="gift-heading">
-                            <p class="sec" style="margin:0;">🎁 Push Gift 候補</p>
-                            <span class="privacy-note">※パートナーには共有されません</span>
+                            <p class="sec" style="margin:4px;">🎁 Push Gift 候補</p>
+                            <span class="privacy-note" style="margin:4px;">※パートナーには共有されません</span>
                         </div>
                         <div id="gift-list"></div>
                         <div class="gift-form">
@@ -86,7 +86,7 @@
                             <input id="gift-price" type="text" inputmode="numeric" pattern="[0-9]*" placeholder="価格（円）">
                             <input id="gift-url" placeholder="商品ページのURL">
                             <button class="btn" id="gift-add"
-                                style="width:auto; padding:0 16px; margin-top:0;">追加</button>
+                                style="width:auto; padding:0 18px; margin-top:0; background:var(--accent); color:#fff;">追加</button>
                         </div>
                     </div>
                 </section>
@@ -97,7 +97,8 @@
                             <h2>⏱ 当日やること</h2>
                             <p class="sub">陣痛タイマー・当日やることリスト</p>
                         </div>
-                        <p class="sub" id="clock" style="margin:0;">--:--</p>
+                        <p class="sub" id="clock" style="margin:0; display:none;">--:--</p>
+                        <!-- 右上に時間表示 このAPPはスマホで使う前提で時間表示の意味は薄いため非表示 -->
                     </div>
                     <div class="body">
                         <div class="timer">
@@ -122,7 +123,7 @@
                         <div class="row" style="margin-top:10px;">
                             <input id="day-new" placeholder="新しい項目を入力">
                             <button class="btn" id="day-add"
-                                style="width:auto; padding:0 16px; margin-top:0;">追加</button>
+                                style="width:auto; padding:0 18px; margin-top:0; background:var(--accent); color:#fff;">追加</button>
                         </div>
                     </div>
                 </section>
@@ -137,7 +138,7 @@
                         <div class="row">
                             <input id="doc-new" placeholder="新しい項目を入力">
                             <button class="btn" id="doc-add"
-                                style="width:auto; padding:0 16px; margin-top:0;">追加</button>
+                                style="width:auto; padding:0 18px; margin-top:0; background:var(--accent); color:#fff;">追加</button>
                         </div>
                     </div>
                 </section>
@@ -161,13 +162,15 @@
                     <div class="hd">
                         <h2>⚙️ 設定</h2>
                         <p class="sub">アカウント・家族情報</p>
+                        <button class="btn" data-signout
+                            style="position:absolute; top:16px; right:16px; height:32px; border-radius:16px; padding:0 18px; font-size:13px; margin:0; background:var(--danger-bg); color:var(--danger-dark);">ログアウト</button>
                     </div>
                     <div class="body">
                         <p class="sec">ログイン中</p>
                         <div class="card" id="me-card"></div>
 
                         <p class="sec" style="margin-top:16px;">家族情報</p>
-                        <div class="card">
+                        <div class="card" style="position:relative;">
                             <label
                                 style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">家族の名前</label>
                             <input id="set-household-name"
@@ -181,9 +184,9 @@
                             <input id="set-due-on" type="date"
                                 style="width:100%; height:38px; border:1px solid #d5d9d4; border-radius:9px; padding:0 10px; font-size:16px; margin-bottom:10px; -webkit-appearance:none; appearance:none; max-width:100%; min-width:0; box-sizing:border-box;">
                             <button class="btn" id="set-save"
-                                style="width:auto; padding:0 16px; margin-top:0; margin-left:auto; display:block;">保存</button>
+                                style="background:var(--accent); color:#fff; height:28px; padding:0 18px; margin-left:auto; display:block;">保存</button>
                             <span id="set-saved-msg"
-                                style="font-size:12px; color:var(--accent-dark); margin-left:10px;"></span>
+                                style="position:absolute; left:12px; bottom:12px; font-size:12px; color:var(--accent-dark);"></span>
                         </div>
 
                         <p class="sec" style="margin-top:16px;">招待コード</p>
@@ -200,8 +203,6 @@
                         <p class="sec" style="margin-top:16px;">家族メンバー</p>
                         <div class="list" id="set-members"></div>
 
-                        <button class="btn" data-signout
-                            style="background:var(--danger); margin-top:18px; width:auto; padding:0 16px; margin-left:auto; display:block;">ログアウト</button>
                     </div>
                 </section>
             </div>

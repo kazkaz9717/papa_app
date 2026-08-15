@@ -265,20 +265,34 @@ body {
     border: 1px solid var(--line);
     border-radius: 12px;
     padding: 12px;
-    margin-bottom: 10px
+    margin-bottom: 14px
 }
 
 /* カード内で左右に要素を並べるための行（タイトルと状態ピルなど） */
 .row {
     display: flex;
     align-items: center;
-    justify-content: space-between
+    justify-content: space-between;
+    gap: 24px;
 }
 
 /* カード内のタイトル文字 */
 .t14 {
     font-size: 14px;
     font-weight: 500
+}
+
+/* 共通ボタン（#auth の外でも使う基本スタイル） */
+.btn {
+    border: none;
+    border-radius: 22px;
+    height: 32px;
+    padding: 0 18px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    background: #f0f1ee;
+    color: var(--ink);
 }
 
 /* 完了した項目のタイトルに取り消し線を付ける */
@@ -315,9 +329,13 @@ body {
 
 /* セクション見出し（「当日やること」「今日のログ」など） */
 .sec {
-    font-size: 13px;
+    font-size: 14px;
     font-weight: 600;
     margin: 20px 0 8px
+}
+
+#set-saved-msg:empty {
+    display: none;
 }
 
 /* 一覧が0件のときに出す文言 */
@@ -633,6 +651,8 @@ body {
 
 /* 「新しい項目を入力」欄（段取り・当日・手続きタブ共通）。iOSの自動ズーム防止のためfont-sizeを16px以上に */
 .row input {
+    flex: 1;
+    min-width: 0;
     height: 36px;
     border: 1px solid #d5d9d4;
     border-radius: 9px;
@@ -696,7 +716,7 @@ body {
 /* Push Gift：非公開であることを示す注記（見出しの横に小さく表示） */
 .privacy-note {
     display: inline-block;
-    margin: 0;
+    margin-left: 12px;
     padding: 3px 8px;
     font-size: 11px;
     color: var(--accent-dark);
@@ -730,7 +750,7 @@ body {
 
     #app {
         width: 100%;
-        height: calc(100dvh - 4px - 20px);
+        height: calc(100dvh - 4px - 16px);
     }
 
     .phone {
@@ -745,15 +765,11 @@ body {
         padding-top: calc(14px + env(safe-area-inset-top));
     }
 
-    .tabs {
-        padding-bottom: 6px;
-    }
-
     .body {
         padding: 8px 10px;
     }
 
     .card {
-        margin-bottom: 14px;
+        margin-bottom: 12px;
     }
 }
