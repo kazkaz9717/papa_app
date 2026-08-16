@@ -15,6 +15,7 @@ Rails.application.routes.draw do
   namespace :api do
     post "signup", to: "auth#signup"
     post "login",  to: "auth#login"
+    post "guest_login", to: "auth#guest_login"
     get  "me",     to: "auth#me"
     resources :checklist_items, only: %i[index create update destroy]
     # 陣痛の記録：一覧・記録・取り消し ＋ リセット

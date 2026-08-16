@@ -64,6 +64,14 @@ class Household < ApplicationRecord
     update!(invite_code: generate_invite_code)
   end
 
+  # ゲスト家族のうち、作成から一定時間経ったものをまとめて削除する（cronなどから定期実行する想定）
+  def self.cleanup_guests!(older_than: 24.hours)
+    where(guest: true).where("created_at < ?", older_than.ago).destroy_all
+  end
+
+  # オーナーが招待コードを再発行する（古いコードは無効になる）
+  def regenerate_invite_code!
+
   private
 
   def generate_invite_code

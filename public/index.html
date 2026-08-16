@@ -50,6 +50,7 @@
         <div class="err" id="auth-err"></div>
         <button class="btn" id="btn-submit">ログイン</button>
         <div class="switch" id="toggle-auth">新規登録はこちら</div>
+        <div class="switch" id="guest-login" style="color:var(--muted); margin-top:6px;">ゲストログイン(デモデータ)</div>
     </div>
 
     <!-- アプリ本体（ログイン後に表示）-->
@@ -77,7 +78,7 @@
                         </div>
 
                         <div class="gift-heading">
-                            <p class="sec" style="margin:4px;">🎁 Push Gift 候補</p>
+                            <p class="sec" style="margin:4px;">Push Gift 候補</p>
                             <span class="privacy-note" style="margin:4px;">※パートナーには共有されません</span>
                         </div>
                         <div id="gift-list"></div>
@@ -166,10 +167,10 @@
                             style="position:absolute; top:16px; right:16px; height:32px; border-radius:16px; padding:0 18px; font-size:13px; margin:0; background:var(--danger-bg); color:var(--danger-dark);">ログアウト</button>
                     </div>
                     <div class="body">
-                        <p class="sec">ログイン中</p>
+                        <p class="sec" style="margin-top:0;">ログイン中</p>
                         <div class="card" id="me-card"></div>
 
-                        <p class="sec" style="margin-top:16px;">家族情報</p>
+                        <p class="sec" style="margin-top:24px;">家族情報</p>
                         <div class="card" style="position:relative;">
                             <label
                                 style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">家族の名前</label>
@@ -189,7 +190,7 @@
                                 style="position:absolute; left:12px; bottom:12px; font-size:12px; color:var(--accent-dark);"></span>
                         </div>
 
-                        <p class="sec" style="margin-top:16px;">招待コード</p>
+                        <p class="sec" style="margin-top:24px;">招待コード</p>
                         <div class="card">
                             <p style="margin:0 0 8px; font-size:20px; font-weight:600; letter-spacing:2px;"
                                 id="set-invite-code">------</p>
@@ -200,7 +201,7 @@
                             <p class="meta">このコードをパートナーに伝えると、同じ家族グループに参加できます</p>
                         </div>
 
-                        <p class="sec" style="margin-top:16px;">家族メンバー</p>
+                        <p class="sec" style="margin-top:24px;">家族メンバー</p>
                         <div class="list" id="set-members"></div>
 
                     </div>

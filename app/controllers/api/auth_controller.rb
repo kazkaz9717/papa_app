@@ -1,6 +1,6 @@
 module Api
   class AuthController < BaseController
-    skip_before_action :authenticate!, only: %i[signup login]
+    skip_before_action :authenticate!, only: %i[signup login guest_login]
 
     def signup
       ActiveRecord::Base.transaction do
@@ -31,6 +31,16 @@ module Api
       else
         render json: { error: "メールアドレスまたはパスワードが違います" }, status: :unauthorized
       end
+    end
+
+    # ゲストログイン：呼ばれるたびに新しい使い捨ての家族・ユーザーを作る
+    def guest_login
+      household = Household.create!(name: "ゲストのデモ家族", due_on: 30.days.from_now.to_date, guest: true)
+      user = household.users.create!(
+        name: "ゲスト", email: "guest-#{SecureRandom.hex(8)}@papa-app.local",
+        password: SecureRandom.hex(16), role: "husband", owner: true
+      )
+      render json: payload(user)
     end
 
     def me

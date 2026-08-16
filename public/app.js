@@ -61,6 +61,18 @@ async function submitAuth() {
     }
 }
 
+async function guestLogin() {
+    $("#auth-err").textContent = "";
+    try {
+        const data = await api("POST", "/guest_login");
+        Token.set(data.token);
+        ME = { user: data.user, household: data.household };
+        enterApp();
+    } catch (e) {
+        $("#auth-err").textContent = e.message;
+    }
+}
+
 // ログイン画面を隠してアプリ本体を表示、データ読み込み開始
 function enterApp() {
     $("#auth").hidden = true;
@@ -564,6 +576,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         $("#btn-submit").textContent = isLogin ? "ログイン" : "新規登録";
         $("#toggle-auth").textContent = isLogin ? "新規登録はこちら" : "ログインはこちら";
     });
+    $("#guest-login").addEventListener("click", guestLogin);
     // 「新しく家族を作る／相手として参加」の切り替え
     $$("[data-mode]").forEach(btn => btn.addEventListener("click", () => {
         signupMode = btn.dataset.mode;

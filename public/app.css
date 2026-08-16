@@ -331,7 +331,7 @@ body {
 .sec {
     font-size: 14px;
     font-weight: 600;
-    margin: 20px 0 8px
+    margin: 36px 0 8px
 }
 
 #set-saved-msg:empty {
@@ -729,7 +729,7 @@ body {
     display: flex;
     align-items: center;
     gap: 8px;
-    margin-top: 36px;
+    margin-top: 48px;
 }
 
 /* メディアクエリ */
