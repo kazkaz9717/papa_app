@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_12_085455) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_16_093521) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -70,6 +70,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_12_085455) do
     t.string "invite_code"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.boolean "guest", default: false, null: false
     t.index ["invite_code"], name: "index_households_on_invite_code", unique: true
   end
 
