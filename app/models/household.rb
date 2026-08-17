@@ -69,9 +69,6 @@ class Household < ApplicationRecord
     where(guest: true).where("created_at < ?", older_than.ago).destroy_all
   end
 
-  # オーナーが招待コードを再発行する（古いコードは無効になる）
-  def regenerate_invite_code!
-
   private
 
   def generate_invite_code
