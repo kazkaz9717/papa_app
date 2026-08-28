@@ -82,6 +82,9 @@ function enterApp() {
     loadChecklist();
     loadContractions();
     loadBenefits();
+    loadLog();
+    loadCustomLogLabels();
+    initLogPanel();
 }
 function signOut() { Token.set(null); location.reload(); }
 
@@ -394,6 +397,189 @@ async function resetContractions() {
     applyStats(data.stats);               // 空の統計を反映（回数0・平均— など）
 }
 
+
+
+// ===== 育児記録 =====
+const LOG_ICON = {
+    milk: "🍼", breast: "🤱", solid: "🍚", meal: "🍽", drink: "🥤",
+    pee: "💧", poop: "💩", both: "💧💩", sleep_start: "😴", wake: "🌞",
+    custom: "📌", diaper: "👶", sleep: "🌙"
+};
+const LOG_LABEL = {
+    milk: "ミルク", breast: "母乳", solid: "離乳食", meal: "ごはん", drink: "飲み物",
+    pee: "おしっこ", poop: "うんち", both: "両方", sleep_start: "寝る", wake: "起きる",
+    diaper: "おむつ", sleep: "睡眠"
+};
+
+function escapeHtml(str) {
+    return String(str).replace(/[&<>"']/g, c => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+    }[c]));
+}
+
+function todayStr() {
+    const d = new Date();
+    return d.getFullYear() + "-" + two(d.getMonth() + 1) + "-" + two(d.getDate());
+}
+
+function shiftDate(dateStr, days) {
+    const d = new Date(dateStr + "T00:00:00");
+    d.setDate(d.getDate() + days);
+    return d.getFullYear() + "-" + two(d.getMonth() + 1) + "-" + two(d.getDate());
+}
+
+let currentLogDate = todayStr();
+let customLogLabels = ["", "", "", ""];
+
+async function loadLog(dateStr) {
+    currentLogDate = dateStr || currentLogDate;
+    const data = await api("GET", "/log_entries?date=" + currentLogDate);
+    if ($("#log-date")) $("#log-date").value = currentLogDate;
+    if ($("#log-heading")) {
+        $("#log-heading").textContent = (currentLogDate === todayStr()) ? "今日のログ" : currentLogDate.replace(/-/g, "/") + " のログ";
+    }
+    renderLog(data.entries, data.summary);
+}
+
+function renderLog(entries, summary) {
+    $("#sum-milk").textContent = (summary.milk || 0) + "回";
+    $("#sum-meal").textContent = (summary.meal || 0) + "回";
+    $("#sum-toilet").textContent = (summary.toilet || 0) + "回";
+    $("#sum-sleep").textContent = (summary.sleep || 0) + "回";
+
+    $("#log-list").innerHTML = (entries || []).map(e => {
+        const d = new Date(e.occurred_at);
+        const tm = two(d.getHours()) + ":" + two(d.getMinutes());
+        const ROLE_CHAR = { husband: "夫", wife: "妻" };
+        const roleClass = e.recorded_by_role === "wife" ? "w" : e.recorded_by_role === "husband" ? "h" : "o";
+        const roleChar = ROLE_CHAR[e.recorded_by_role] || "他";
+        const who = e.recorded_by
+            ? `<span class="who ${roleClass}">${roleChar}</span>`
+            : "";
+        const label = e.kind === "custom" ? (e.note || "カスタム") : (LOG_LABEL[e.kind] || e.kind);
+        return `<div class="rec" data-id="${e.id}">
+            <span class="tm">${tm}</span>
+            <span class="ic">${LOG_ICON[e.kind] || "📌"}</span>
+            <span class="txt" style="flex:1;">${escapeHtml(label)}</span>
+            ${who}
+            <button class="del" data-del-log="${e.id}" title="削除">×</button>
+        </div>`;
+    }).join("") || `<div class="empty">記録がありません</div>`;
+
+    $$("#log-list [data-del-log]").forEach(btn => {
+        btn.addEventListener("click", () => deleteLogEntry(btn.dataset.delLog));
+    });
+}
+
+async function addLogEntry(kind, note) {
+    await api("POST", "/log_entries", note ? { kind, note } : { kind });
+    loadLog(todayStr());
+}
+
+async function deleteLogEntry(id) {
+    if (!confirm("この記録を削除しますか？")) return;
+    await api("DELETE", "/log_entries/" + id);
+    loadLog();
+}
+
+async function loadCustomLogLabels() {
+    const data = await api("GET", "/household/custom_log_labels");
+    customLogLabels = data.custom_log_labels || ["", "", "", ""];
+    renderCustomTiles();
+}
+
+function renderCustomTiles() {
+    const tiles = customLogLabels.map((label, i) => {
+        if (label) {
+            return `<div class="c" data-custom-index="${i}"><div class="ic">📌</div><p class="k">${escapeHtml(label)}</p></div>`;
+        }
+        return `<div class="c empty" data-custom-index="${i}"><div class="ic">－</div><p class="k">未設定</p></div>`;
+    }).join("");
+    const editTile = `<div class="c" id="custom-edit-open"><div class="ic">✎</div><p class="k">編集</p></div>`;
+    $("#log-custom-tiles").innerHTML = tiles + editTile;
+
+    $$("#log-custom-tiles [data-custom-index]").forEach(el => {
+        el.addEventListener("click", () => {
+            const i = Number(el.dataset.customIndex);
+            const label = customLogLabels[i];
+            if (label) {
+                addLogEntry("custom", label);
+            } else {
+                openCustomEditModal();
+            }
+        });
+    });
+    $("#custom-edit-open").addEventListener("click", openCustomEditModal);
+    syncLogPanelPadding();
+}
+
+function renderCustomEditModal() {
+    $("#custom-edit-list").innerHTML = customLogLabels.map((label, i) => {
+        return label
+            ? `<div class="modal-row"><span class="lbl">📌 ${escapeHtml(label)}</span><span class="modal-action del" data-del-idx="${i}">削除</span></div>`
+            : `<div class="modal-row"><span class="lbl empty">未設定</span><span class="modal-action add" data-add-idx="${i}">追加</span></div>`;
+    }).join("");
+
+    $$("#custom-edit-list [data-add-idx]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            const label = prompt("項目名を入力してください（例: 体温測定）");
+            if (!label || !label.trim()) return;
+            await saveCustomLabel(Number(btn.dataset.addIdx), label.trim());
+        });
+    });
+    $$("#custom-edit-list [data-del-idx]").forEach(btn => {
+        btn.addEventListener("click", async () => {
+            if (!confirm("この項目を削除しますか？")) return;
+            await saveCustomLabel(Number(btn.dataset.delIdx), "");
+        });
+    });
+}
+
+async function saveCustomLabel(index, label) {
+    const data = await api("PATCH", "/household/custom_log_labels", { index, label });
+    customLogLabels = data.custom_log_labels;
+    renderCustomTiles();
+    renderCustomEditModal();
+}
+
+function openCustomEditModal() {
+    renderCustomEditModal();
+    $("#custom-edit-modal").hidden = false;
+}
+
+function closeCustomEditModal() {
+    $("#custom-edit-modal").hidden = true;
+}
+
+function syncLogPanelPadding() {
+    const panel = document.querySelector(".qc-panel");
+    const body = document.querySelector("#v-log .body");
+    if (panel && body) {
+        body.style.paddingBottom = (panel.offsetHeight + 16) + "px";
+    }
+}
+
+function toggleLogPanel() {
+    const body = $("#log-panel-body");
+    const arrow = $("#log-panel-arrow");
+    const willOpen = body.hidden;
+    body.hidden = !willOpen;
+    arrow.textContent = willOpen ? "▴ 閉じる" : "▾ 開く";
+    localStorage.setItem("papa_log_panel_open", willOpen ? "1" : "0");
+    syncLogPanelPadding();
+}
+
+function initLogPanel() {
+    const open = localStorage.getItem("papa_log_panel_open") === "1";
+    $("#log-panel-body").hidden = !open;
+    $("#log-panel-arrow").textContent = open ? "▴ 閉じる" : "▾ 開く";
+    syncLogPanelPadding();
+}
+
+window.addEventListener("resize", syncLogPanelPadding);
+
+
+
 // ===== お金（育休・給付金）=====
 
 // 一覧を取得して画面に描画する
@@ -591,6 +777,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#day-add").addEventListener("click", () => addChecklistItem("day", "#day-new", "#day-add"));
     $("#doc-add").addEventListener("click", () => addChecklistItem("procedure", "#doc-new", "#doc-add"));
     $("#gift-add").addEventListener("click", addGift);
+    $$("#v-log .qc .c[data-kind]").forEach(el => el.addEventListener("click", () => addLogEntry(el.dataset.kind)));
+    $("#custom-edit-close").addEventListener("click", closeCustomEditModal);
+    $("#log-panel-toggle").addEventListener("click", toggleLogPanel);
+    $("#log-date").addEventListener("change", () => loadLog($("#log-date").value));
+    $("#log-today-btn").addEventListener("click", () => loadLog(todayStr()));
+    $("#log-prev").addEventListener("click", () => loadLog(shiftDate(currentLogDate, -1)));
+    $("#log-next").addEventListener("click", () => loadLog(shiftDate(currentLogDate, 1)));
     $("#set-save").addEventListener("click", saveHousehold);
     $("#set-copy-invite").addEventListener("click", copyInviteCode);
     $("#set-regenerate-invite").addEventListener("click", regenerateInviteCode);

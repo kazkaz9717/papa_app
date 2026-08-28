@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_16_093521) do
+ActiveRecord::Schema[7.2].define(version: 2026_08_28_082915) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -71,7 +71,20 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_16_093521) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.boolean "guest", default: false, null: false
+    t.string "custom_log_labels", default: ["", "", "", ""], null: false, array: true
     t.index ["invite_code"], name: "index_households_on_invite_code", unique: true
+  end
+
+  create_table "log_entries", force: :cascade do |t|
+    t.bigint "household_id", null: false
+    t.string "kind", null: false
+    t.datetime "occurred_at", null: false
+    t.bigint "recorded_by_id"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.text "note"
+    t.index ["household_id"], name: "index_log_entries_on_household_id"
+    t.index ["recorded_by_id"], name: "index_log_entries_on_recorded_by_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -96,5 +109,7 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_16_093521) do
   add_foreign_key "checklist_items", "users", column: "done_by_id"
   add_foreign_key "contraction_events", "households"
   add_foreign_key "contraction_events", "users", column: "recorded_by_id"
+  add_foreign_key "log_entries", "households"
+  add_foreign_key "log_entries", "users", column: "recorded_by_id"
   add_foreign_key "users", "households"
 end

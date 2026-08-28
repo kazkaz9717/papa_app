@@ -57,6 +57,7 @@
     <div id="app" hidden>
         <div class="phone">
             <div class="screen">
+
                 <!-- 段取り -->
                 <section class="view active" id="v-prep">
                     <div class="hd" style="display:flex; align-items:center; justify-content:space-between;">
@@ -91,6 +92,7 @@
                         </div>
                     </div>
                 </section>
+
                 <!-- 当日（陣痛タイマーは次で動かします）-->
                 <section class="view" id="v-day">
                     <div class="hd" style="display:flex; align-items:center; justify-content:space-between;">
@@ -128,6 +130,7 @@
                         </div>
                     </div>
                 </section>
+
                 <!-- 手続き -->
                 <section class="view" id="v-doc">
                     <div class="hd">
@@ -143,6 +146,7 @@
                         </div>
                     </div>
                 </section>
+
                 <!-- お金・記録-->
                 <section class="view" id="v-money">
                     <div class="hd">
@@ -151,14 +155,106 @@
                     </div>
                     <div class="body" id="money-list"></div>
                 </section>
+
+                <!-- 育児記録 -->
                 <section class="view" id="v-log">
                     <div class="hd">
                         <h2>📓 育児記録</h2>
+                        <div class="row"
+                            style="margin-top:8px; align-items:center; gap:6px; justify-content:flex-start;">
+                            <button class="date-nav" id="log-prev">◀</button>
+                            <input type="date" id="log-date"
+                                style="height:32px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; flex:1;">
+                            <button class="date-nav" id="log-next">▶</button>
+                            <button class="gift-choose" id="log-today-btn">今日</button>
+                        </div>
                     </div>
+
                     <div class="body">
-                        <div class="empty">近日対応</div>
+                        <div class="stats">
+                            <div class="stat">
+                                <p class="k">授乳</p>
+                                <p class="v" id="sum-milk">0回</p>
+                            </div>
+                            <div class="stat">
+                                <p class="k">食事</p>
+                                <p class="v" id="sum-meal">0回</p>
+                            </div>
+                            <div class="stat">
+                                <p class="k">排泄</p>
+                                <p class="v" id="sum-toilet">0回</p>
+                            </div>
+                            <div class="stat">
+                                <p class="k">睡眠</p>
+                                <p class="v" id="sum-sleep">0回</p>
+                            </div>
+                        </div>
+
+                        <p class="sec" id="log-heading">今日のログ</p>
+                        <div class="list" id="log-list"></div>
+                    </div>
+
+                    <div class="qc-panel">
+                        <div class="qc-panel-toggle" id="log-panel-toggle">
+                            <span class="lbl">記録する</span>
+                            <span class="arrow" id="log-panel-arrow">▾ 開く</span>
+                        </div>
+                        <div id="log-panel-body" hidden>
+                            <p class="sec" style="margin-top:8px;">授乳・食事</p>
+                            <div class="qc qc-5">
+                                <div class="c" data-kind="breast">
+                                    <div class="ic">🤱</div>
+                                    <p class="k">母乳</p>
+                                </div>
+                                <div class="c" data-kind="milk">
+                                    <div class="ic">🍼</div>
+                                    <p class="k">ミルク</p>
+                                </div>
+                                <div class="c" data-kind="solid">
+                                    <div class="ic">🍚</div>
+                                    <p class="k">離乳食</p>
+                                </div>
+                                <div class="c" data-kind="meal">
+                                    <div class="ic">🍽</div>
+                                    <p class="k">ごはん</p>
+                                </div>
+                                <div class="c" data-kind="drink">
+                                    <div class="ic">🥤</div>
+                                    <p class="k">飲み物</p>
+                                </div>
+                            </div>
+
+                            <p class="sec" style="margin-top:8px;">排泄・睡眠</p>
+                            <div class="qc qc-5">
+                                <div class="c" data-kind="pee">
+                                    <div class="ic">💧</div>
+                                    <p class="k">おしっこ</p>
+                                </div>
+                                <div class="c" data-kind="poop">
+                                    <div class="ic">💩</div>
+                                    <p class="k">うんち</p>
+                                </div>
+                                <div class="c" data-kind="both">
+                                    <div class="ic">💧💩</div>
+                                    <p class="k">両方</p>
+                                </div>
+                                <div class="c" data-kind="sleep_start">
+                                    <div class="ic">😴</div>
+                                    <p class="k">寝る</p>
+                                </div>
+                                <div class="c" data-kind="wake">
+                                    <div class="ic">🌞</div>
+                                    <p class="k">起きる</p>
+                                </div>
+                            </div>
+
+                            <p class="sec" style="margin-top:8px;">カスタム</p>
+                            <div class="qc qc-5" id="log-custom-tiles"></div>
+                        </div>
                     </div>
                 </section>
+
+                <!-- 設定 -->
                 <section class="view" id="v-settings">
                     <div class="hd">
                         <h2>⚙️ 設定</h2>
@@ -206,6 +302,7 @@
 
                     </div>
                 </section>
+
             </div>
             <nav class="tabs">
                 <button class="tab on" data-v="v-prep"><span class="ic">🗒</span>段取り</button>
@@ -215,6 +312,13 @@
                 <button class="tab" data-v="v-log"><span class="ic">📓</span>記録</button>
                 <button class="tab" data-v="v-settings"><span class="ic">⚙️</span>設定</button>
             </nav>
+            <div id="custom-edit-modal" class="modal-overlay" hidden>
+                <div class="modal-panel">
+                    <p class="modal-title">カスタム項目の編集</p>
+                    <div id="custom-edit-list"></div>
+                    <div class="modal-close" id="custom-edit-close">閉じる</div>
+                </div>
+            </div>
         </div>
     </div>
 

@@ -3,6 +3,8 @@ class Household < ApplicationRecord
   has_many :checklist_items, dependent: :destroy
   # この家族の陣痛の記録（1つの家族が複数の記録を持つ）
   has_many :contraction_events, dependent: :destroy
+  # 育児記録
+    has_many :log_entries, dependent: :destroy
   # この家族の育休・給付金ステップ
   has_many :benefit_steps, dependent: :destroy
 

@@ -39,6 +39,20 @@ module Api
       render json: household_json(current_household)
     end
 
+    def custom_log_labels
+      render json: { custom_log_labels: current_household.custom_log_labels }
+    end
+
+    def update_custom_log_labels
+      index = params[:index].to_i
+      return render json: { error: "不正な位置です" }, status: :unprocessable_entity unless (0..3).cover?(index)
+
+      labels = current_household.custom_log_labels.dup
+      labels[index] = params[:label].to_s.strip
+      current_household.update!(custom_log_labels: labels)
+      render json: { custom_log_labels: current_household.custom_log_labels }
+    end
+
     private
 
     def household_params
