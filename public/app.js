@@ -510,13 +510,12 @@ function renderCustomTiles() {
         });
     });
     $("#custom-edit-open").addEventListener("click", openCustomEditModal);
-    syncLogPanelPadding();
 }
 
 function renderCustomEditModal() {
     $("#custom-edit-list").innerHTML = customLogLabels.map((label, i) => {
         return label
-            ? `<div class="modal-row"><span class="lbl">📌 ${escapeHtml(label)}</span><span class="modal-action del" data-del-idx="${i}">削除</span></div>`
+            ? `<div class="modal-row"><span class="lbl">📌 ${escapeHtml(label)}</span><span class="modal-action remove" data-del-idx="${i}">削除</span></div>`
             : `<div class="modal-row"><span class="lbl empty">未設定</span><span class="modal-action add" data-add-idx="${i}">追加</span></div>`;
     }).join("");
 
@@ -551,14 +550,6 @@ function closeCustomEditModal() {
     $("#custom-edit-modal").hidden = true;
 }
 
-function syncLogPanelPadding() {
-    const panel = document.querySelector(".qc-panel");
-    const body = document.querySelector("#v-log .body");
-    if (panel && body) {
-        body.style.paddingBottom = (panel.offsetHeight + 16) + "px";
-    }
-}
-
 function toggleLogPanel() {
     const body = $("#log-panel-body");
     const arrow = $("#log-panel-arrow");
@@ -566,17 +557,13 @@ function toggleLogPanel() {
     body.hidden = !willOpen;
     arrow.textContent = willOpen ? "▴ 閉じる" : "▾ 開く";
     localStorage.setItem("papa_log_panel_open", willOpen ? "1" : "0");
-    syncLogPanelPadding();
 }
 
 function initLogPanel() {
     const open = localStorage.getItem("papa_log_panel_open") === "1";
     $("#log-panel-body").hidden = !open;
     $("#log-panel-arrow").textContent = open ? "▴ 閉じる" : "▾ 開く";
-    syncLogPanelPadding();
 }
-
-window.addEventListener("resize", syncLogPanelPadding);
 
 
 

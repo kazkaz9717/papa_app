@@ -139,7 +139,9 @@ body {
 /* タブの中身が入る、スクロールできるエリア */
 .screen {
     flex: 1;
-    overflow-y: auto
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
 }
 
 /* 各タブの画面。.active が付いているものだけ表示する（それ以外は非表示） */
@@ -149,7 +151,10 @@ body {
 }
 
 .view.active {
-    display: block
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    min-height: 0;
 }
 
 /* 出産予定日までのカウントダウン */
@@ -196,7 +201,11 @@ body {
 
 /* ヘッダーの下、画面本体のpadding */
 .body {
-    padding: 14px
+    padding: 14px;
+    flex: 1;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+    min-height: 0;
 }
 
 
@@ -868,16 +877,11 @@ body {
 }
 
 .qc-panel {
-    position: sticky;
-    bottom: 0;
+    flex: 0 0 auto;
     background: var(--card);
     border-top: 1px solid var(--line);
     padding: 6px 14px calc(6px + env(safe-area-inset-bottom));
     box-shadow: 0 -4px 10px rgba(0, 0, 0, .05);
-}
-
-#v-log .body {
-    padding-bottom: 60px;
 }
 
 .qc-panel-toggle {
@@ -964,7 +968,7 @@ body {
     border-color: var(--accent);
 }
 
-.modal-action.del {
+.modal-action.remove {
     color: var(--danger-dark);
     border-color: var(--danger);
 }
