@@ -401,14 +401,13 @@ async function resetContractions() {
 
 // ===== 育児記録 =====
 const LOG_ICON = {
-    milk: "🍼", breast: "🤱", solid: "🍚", meal: "🍽", drink: "🥤",
-    pee: "💧", poop: "💩", both: "💧💩", sleep_start: "😴", wake: "🌞",
+    milk: "🍼", breast: "🤱", drink: "🥤", solid: "🍚", meal: "🍽",
+    pee: "💧", poop: "💩", both: "💧💩", sleep_start: "💤", wake: "⏰",
     custom: "📌", diaper: "👶", sleep: "🌙"
 };
 const LOG_LABEL = {
-    milk: "ミルク", breast: "母乳", solid: "離乳食", meal: "ごはん", drink: "飲み物",
-    pee: "おしっこ", poop: "うんち", both: "両方", sleep_start: "寝る", wake: "起きる",
-    diaper: "おむつ", sleep: "睡眠"
+    milk: "ミルク", breast: "母乳", drink: "飲み物", solid: "離乳食", meal: "ごはん",
+    pee: "おしっこ", poop: "うんち", both: "両方", sleep_start: "寝る", wake: "起きる"
 };
 
 function escapeHtml(str) {
