@@ -801,10 +801,10 @@ body {
 
 /* 「誰が記録したか」を示す丸いイニシャル */
 .rec .who {
-    width: 20px;
-    height: 20px;
+    width: 24px;
+    height: 24px;
     border-radius: 50%;
-    font-size: 10px;
+    font-size: 11px;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -828,6 +828,9 @@ body {
 
 /* 削除ボタンを右端に寄せる */
 .rec .del {
+    width: 28px;
+    height: 28px;
+    font-size: 16px;
     margin-left: auto;
 }
 
@@ -985,6 +988,10 @@ body {
 
 .modal-row .lbl.editable {
     cursor: pointer;
+}
+
+#log-heading {
+    margin-top: 10px;
 }
 
 
