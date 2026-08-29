@@ -332,13 +332,18 @@
 
                     <div id="log-detail-amount-wrap" style="margin-bottom:10px;" hidden>
                         <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">量</label>
-                        <div style="display:flex; align-items:center; gap:6px;">
+                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
                             <button type="button" id="log-detail-amount-minus" class="date-nav">－</button>
                             <input type="text" inputmode="numeric" pattern="[0-9]*" id="log-detail-amount"
-                                placeholder="120"
+                                placeholder="80"
                                 style="flex:1; min-width:0; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; text-align:center;">
                             <button type="button" id="log-detail-amount-plus" class="date-nav">＋</button>
-                            <span style="flex:0 0 auto; font-size:13px; color:var(--muted);">ml</span>
+                        </div>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <button type="button" id="log-detail-amount-prev" class="date-nav">‹</button>
+                            <div id="log-detail-amount-presets"
+                                style="flex:1; display:grid; grid-template-columns:repeat(3,1fr); gap:6px;"></div>
+                            <button type="button" id="log-detail-amount-next" class="date-nav">›</button>
                         </div>
                     </div>
 

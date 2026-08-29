@@ -1,8 +1,10 @@
 // ===== 共通の小道具 =====
 const $ = (s) => document.querySelector(s);
 const $$ = (s) => Array.from(document.querySelectorAll(s));
-// 入力文字をそのまま画面に出しても安全にする（HTMLエスケープ）
-const esc = (s) => String(s ?? "").replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+// HTMLエスケープは escapeHtml() に統一した（以前は esc という別関数もあったが、
+// escapeHtml のほうがシングルクォートにも対応していて安全なためこちらだけ残した。
+// escapeHtml はファイル下部で定義しているが、function宣言は巻き上げられるので
+// このファイル内のどこから呼んでも問題ない）
 
 // トークン（ログインの鍵）をブラウザに保存・取り出し。再読み込みしてもログインが続く
 const Token = {
@@ -146,9 +148,9 @@ async function loadChecklist() {
 // 段取り・当日：チェックボックス形式で描画（削除ボタン付き）
 function renderChecks(sel, items) {
     $(sel).innerHTML = (items || []).map(i =>
-        `<div class="chk ${i.done ? "done" : ""}" data-id="${i.id}" data-doneby="${esc(i.done_by || "")}">
-       <span class="box">✓</span><span class="txt">${esc(i.title)}</span>
-       ${i.done && i.done_by ? `<span class="by">${esc(i.done_by)}</span>` : ""}
+        `<div class="chk ${i.done ? "done" : ""}" data-id="${i.id}" data-doneby="${escapeHtml(i.done_by || "")}">
+       <span class="box">✓</span><span class="txt">${escapeHtml(i.title)}</span>
+       ${i.done && i.done_by ? `<span class="by">${escapeHtml(i.done_by)}</span>` : ""}
        <button class="del" data-del="${i.id}" title="削除">×</button>
      </div>`).join("") || `<div class="empty">項目がありません</div>`;
 
@@ -187,19 +189,19 @@ async function addChecklistItem(category, inputSel, buttonSel) {
 // 手続き：カード形式で描画（提出先・補足・公式リンクつき）
 function renderDoc(sel, items) {
     $(sel).innerHTML = (items || []).map(i =>
-        `<div class="card" data-id="${i.id}" data-doneby="${esc(i.done_by || "")}">
+        `<div class="card" data-id="${i.id}" data-doneby="${escapeHtml(i.done_by || "")}">
        <div class="row">
-         <span class="t14 ${i.done ? "strike" : ""}">${esc(i.title)}</span>
+         <span class="t14 ${i.done ? "strike" : ""}">${escapeHtml(i.title)}</span>
          <div style="display:flex; align-items:center; gap:6px;">
            <span class="pill ${i.done ? "g" : "n"}">${i.done ? "完了" : "未"}</span>
            <button class="del" data-del="${i.id}" title="削除">×</button>
          </div>
        </div>
-       ${i.place ? `<p class="meta">📍 ${esc(i.place)}</p>` : ""}
-       ${i.detail ? `<p class="meta">${esc(i.detail)}</p>` : ""}
+       ${i.place ? `<p class="meta">📍 ${escapeHtml(i.place)}</p>` : ""}
+       ${i.detail ? `<p class="meta">${escapeHtml(i.detail)}</p>` : ""}
        <div class="row" style="margin-top:8px; align-items:center;">
-         ${i.url ? `<a class="meta-link" href="${esc(i.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 詳しく見る（公式サイト）</a>` : "<span></span>"}
-         ${i.done && i.done_by ? `<span class="meta" style="margin:0 0 0 auto;">✅ ${esc(i.done_by)}が完了</span>` : ""}
+         ${i.url ? `<a class="meta-link" href="${escapeHtml(i.url)}" target="_blank" rel="noopener" onclick="event.stopPropagation()">🔗 詳しく見る（公式サイト）</a>` : "<span></span>"}
+         ${i.done && i.done_by ? `<span class="meta" style="margin:0 0 0 auto;">✅ ${escapeHtml(i.done_by)}が完了</span>` : ""}
        </div>
      </div>`).join("") || `<div class="empty">項目がありません</div>`;
 
@@ -248,9 +250,9 @@ function renderGifts(items) {
             return `
         <div class="card gift-card" data-id="${i.id}">
           <div class="gift-form">
-            <input id="gedit-title-${i.id}" value="${esc(i.title)}" placeholder="商品名">
-            <input id="gedit-price-${i.id}" type="text" inputmode="numeric" pattern="[0-9]*" value="${esc(i.detail || "")}" placeholder="価格（円）">
-            <input id="gedit-url-${i.id}" value="${esc(i.url || "")}" placeholder="商品ページのURL">
+            <input id="gedit-title-${i.id}" value="${escapeHtml(i.title)}" placeholder="商品名">
+            <input id="gedit-price-${i.id}" type="text" inputmode="numeric" pattern="[0-9]*" value="${escapeHtml(i.detail || "")}" placeholder="価格（円）">
+            <input id="gedit-url-${i.id}" value="${escapeHtml(i.url || "")}" placeholder="商品ページのURL">
             <div class="row">
               <button class="btn" data-save="${i.id}" style="width:auto; padding:0 14px; margin-top:0;">保存</button>
               <button class="gift-choose" data-cancel="${i.id}">キャンセル</button>
@@ -263,14 +265,14 @@ function renderGifts(items) {
         return `
       <div class="card gift-card ${i.done ? "chosen" : ""}" data-id="${i.id}">
         <div class="row">
-          <span class="t14">${esc(i.title)}</span>
+          <span class="t14">${escapeHtml(i.title)}</span>
           <div style="display:flex; align-items:center; gap:6px;">
             ${i.done ? `<span class="pill g">本命</span>` : ""}
             <button class="del" data-del="${i.id}" title="削除">×</button>
           </div>
         </div>
         ${i.detail ? `<p class="gift-price">${formatYen(i.detail)}</p>` : ""}
-        ${i.url ? `<a class="meta-link" href="${esc(i.url)}" target="_blank" rel="noopener">🔗 商品ページ</a>` : ""}
+        ${i.url ? `<a class="meta-link" href="${escapeHtml(i.url)}" target="_blank" rel="noopener">🔗 商品ページ</a>` : ""}
         <div class="row" style="margin-top:8px;">
           <button class="gift-choose" data-choose="${i.id}" data-chosen="${i.done}">${i.done ? "本命を解除" : "本命に選ぶ"}</button>
           <button class="gift-choose" data-edit="${i.id}">編集</button>
@@ -411,6 +413,8 @@ const LOG_LABEL = {
 };
 const AMOUNT_KINDS = ["milk", "breast"];
 
+// 文字列をHTMLとして安全に埋め込めるようにエスケープする
+// （&, <, >, ", ' をすべて対応する実体参照に変換。アプリ全体でこの関数に統一した）
 function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, c => ({
         "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
@@ -442,6 +446,51 @@ let currentLogDate = todayStr();
 let customLogLabels = ["", "", "", ""];
 let lastLogEntries = [];
 let logDetailContext = null; // { mode: "create"|"edit", kind, id, note }
+const MIN_AMOUNT = 0;
+const MAX_AMOUNT = 300;                  // ml の上限
+const MIN_PRESET_BASE = 10;              // プリセット一番左の最小値（0mlは出さない）
+const MAX_PRESET_BASE = MAX_AMOUNT - 20; // プリセット一番右が300を超えないための上限(280)
+
+let amountPresetBase = 70;
+
+// プリセットボタン（左/中央/右の3つ）を今のamountPresetBaseに従って描画する
+function renderAmountPresets() {
+    const current = Number($("#log-detail-amount").value) || null;
+    const presets = [amountPresetBase, amountPresetBase + 10, amountPresetBase + 20];
+    $("#log-detail-amount-presets").innerHTML = presets.map(v =>
+        `<button type="button" class="preset-btn ${v === current ? "on" : ""}" data-preset="${v}">${v}ml</button>`
+    ).join("");
+    $$("#log-detail-amount-presets [data-preset]").forEach(btn => {
+        btn.addEventListener("click", () => {
+            $("#log-detail-amount").value = btn.dataset.preset;
+            centerAmountPresets(btn.dataset.preset); // タップした値を中心にパネルを追従させる
+        });
+    });
+
+    // 端まで来たら ‹ / › ボタンを押せなくする
+    $("#log-detail-amount-prev").disabled = amountPresetBase <= MIN_PRESET_BASE;
+    $("#log-detail-amount-next").disabled = amountPresetBase >= MAX_PRESET_BASE;
+}
+
+// 今の量（rawValue）を中心に、プリセットの範囲(amountPresetBase)を計算し直して描画する
+// 空欄のときは80mlを基準にする（未入力時のデフォルト表示）
+function centerAmountPresets(rawValue) {
+    const hasValue = rawValue !== "" && rawValue != null && !Number.isNaN(Number(rawValue));
+    const base = hasValue ? Number(rawValue) : 80;
+    const rounded = Math.round(base / 10) * 10;
+    amountPresetBase = Math.min(MAX_PRESET_BASE, Math.max(MIN_PRESET_BASE, rounded - 10));
+    renderAmountPresets();
+}
+
+// ml（量）を増減させる共通処理（±10ボタン用）
+function adjustAmount(delta) {
+    const input = $("#log-detail-amount");
+    // 空欄のときはパネルと同じ基準(80)を出発点にする
+    const current = input.value === "" ? 80 : (parseInt(input.value, 10) || 0);
+    const next = Math.min(MAX_AMOUNT, Math.max(MIN_AMOUNT, current + delta));
+    input.value = next;
+    centerAmountPresets(next);
+}
 
 async function loadLog(dateStr) {
     currentLogDate = dateStr || currentLogDate;
@@ -512,6 +561,10 @@ function openLogDetail(kind, note, existing) {
     $("#log-detail-amount-wrap").hidden = !isAmount;
     $("#log-detail-memo-wrap").hidden = isAmount;
     $("#log-detail-amount").value = existing?.amount ?? "";
+    if (isAmount) {
+        // 既存の値（編集時）または未入力（新規時）を中心にパネルを表示する
+        centerAmountPresets($("#log-detail-amount").value);
+    }
     $("#log-detail-memo").value = existing?.memo ?? "";
     $("#log-detail-modal").hidden = false;
     if (existing) closeLogPanel();
@@ -621,26 +674,32 @@ function closeCustomEditModal() {
     $("#custom-edit-modal").hidden = true;
 }
 
-
-function toggleLogPanel() {
-    const body = $("#log-panel-body");
-    const arrow = $("#log-panel-arrow");
-    const willOpen = body.hidden;
-    body.hidden = !willOpen;
-    arrow.textContent = willOpen ? "▴ 閉じる" : "▾ 開く";
-    localStorage.setItem("papa_log_panel_open", willOpen ? "1" : "0");
-}
-
-function closeLogPanel() {
-    $("#log-panel-body").hidden = true;
-    $("#log-panel-arrow").textContent = "▾ 開く";
-    localStorage.setItem("papa_log_panel_open", "0");
-}
-
-function initLogPanel() {
-    const open = localStorage.getItem("papa_log_panel_open") === "1";
+// 「記録する」パネルの開閉状態をまとめて管理する共通処理
+// open: true なら開く、false なら閉じる
+// ※ 以前は toggleLogPanel / closeLogPanel / initLogPanel の3つが
+//   それぞれ似た内容（表示切替・矢印の文字・localStorage保存）を
+//   個別に書いていたため、この1関数にまとめた
+function setLogPanelOpen(open) {
     $("#log-panel-body").hidden = !open;
     $("#log-panel-arrow").textContent = open ? "▴ 閉じる" : "▾ 開く";
+    localStorage.setItem("papa_log_panel_open", open ? "1" : "0");
+}
+
+// タップで開閉を反転させる
+function toggleLogPanel() {
+    const isHidden = $("#log-panel-body").hidden;
+    setLogPanelOpen(isHidden);
+}
+
+// 保存時・編集画面を開いたときなど、強制的に閉じたいときに使う
+function closeLogPanel() {
+    setLogPanelOpen(false);
+}
+
+// 画面を開いた最初のタイミングで、前回保存した開閉状態を復元する
+function initLogPanel() {
+    const wasOpen = localStorage.getItem("papa_log_panel_open") === "1";
+    setLogPanelOpen(wasOpen);
 }
 
 
@@ -669,18 +728,18 @@ function renderBenefits(steps) {
         const buttons = ["todo", "doing", "done"].map(st =>
             `<button data-step="${s.id}" data-status="${st}" class="${s.status === st ? "on" : ""}">${labels[st]}</button>`
         ).join("");
-        const link = s.url ? `<a class="meta-link" href="${esc(s.url)}" target="_blank" rel="noopener">🔗 詳しく見る（公式サイト）</a>` : "";
+        const link = s.url ? `<a class="meta-link" href="${escapeHtml(s.url)}" target="_blank" rel="noopener">🔗 詳しく見る（公式サイト）</a>` : "";
 
         return `<div class="tl">
       <div class="dot"><div class="c" style="background:${bg};color:${fg}">${mark}</div>${line}</div>
       <div class="ct">
-        <p class="ph">${esc(s.timing_note || s.phase_label)}</p>
-        <p class="ti">${esc(s.title)}</p>
-        <p class="tx">${esc(s.description)}</p>
+        <p class="ph">${escapeHtml(s.timing_note || s.phase_label)}</p>
+        <p class="ti">${escapeHtml(s.title)}</p>
+        <p class="tx">${escapeHtml(s.description)}</p>
         <div class="btns">${buttons}</div>
         <div class="row" style="margin-top:6px; align-items:center;">
           ${link || "<span></span>"}
-          ${s.updated_by ? `<span class="meta" style="margin:0 0 0 auto;">✅ ${esc(s.updated_by)}が最終更新</span>` : ""}
+          ${s.updated_by ? `<span class="meta" style="margin:0 0 0 auto;">✅ ${escapeHtml(s.updated_by)}が最終更新</span>` : ""}
         </div>
       </div>
     </div>`;
@@ -705,8 +764,8 @@ async function loadSettings() {
 
     // ログイン中のアカウント
     $("#me-card").innerHTML = `
-    <p style="margin:0 0 4px; font-weight:600;">${esc(ME.user.name)}（${ROLE_LABELS[ME.user.role] || ME.user.role}）</p>
-    <p class="meta" style="margin:0;">${esc(ME.user.email)}</p>
+    <p style="margin:0 0 4px; font-weight:600;">${escapeHtml(ME.user.name)}（${ROLE_LABELS[ME.user.role] || ME.user.role}）</p>
+    <p class="meta" style="margin:0;">${escapeHtml(ME.user.email)}</p>
   `;
 
     // 家族情報フォームに現在値をセット
@@ -721,7 +780,7 @@ async function loadSettings() {
     // 家族メンバー一覧（オーナーだけ、自分以外に削除ボタンを表示）
     $("#set-members").innerHTML = h.members.map(m => `
     <div class="card" style="margin-bottom:8px; display:flex; align-items:center; justify-content:space-between;">
-      <p style="margin:0;">${esc(m.name)}（${esc(m.role_label)}）${m.owner ? "👑" : ""}</p>
+      <p style="margin:0;">${escapeHtml(m.name)}（${escapeHtml(m.role_label)}）${m.owner ? "👑" : ""}</p>
       ${ME.user.owner && m.id !== ME.user.id ? `<button class="del" data-remove-member="${m.id}" title="削除">×</button>` : ""}
     </div>
   `).join("");
@@ -843,15 +902,28 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#doc-add").addEventListener("click", () => addChecklistItem("procedure", "#doc-new", "#doc-add"));
     $("#gift-add").addEventListener("click", addGift);
     $$("#v-log .qc .c[data-kind]").forEach(el => el.addEventListener("click", () => openLogDetail(el.dataset.kind)));
-    $("#log-detail-save").addEventListener("click", saveLogDetail);
+    $("#log-detail-save").addEventListener("click", saveLogDetail)
     $("#log-detail-cancel").addEventListener("click", closeLogDetail);
-    $("#log-detail-amount-minus").addEventListener("click", () => {
-        const v = Math.max(0, (parseInt($("#log-detail-amount").value, 10) || 0) - 5);
-        $("#log-detail-amount").value = v;
+    // ±10ボタン（前回は±5だったが10刻みに変更）
+    $("#log-detail-amount-minus").addEventListener("click", () => adjustAmount(-10));
+    $("#log-detail-amount-plus").addEventListener("click", () => adjustAmount(10));
+
+    // 値を変えずにプリセットの範囲だけ手動でずらす（10〜280の間でクランプ）
+    $("#log-detail-amount-prev").addEventListener("click", () => {
+        amountPresetBase = Math.max(MIN_PRESET_BASE, amountPresetBase - 10);
+        renderAmountPresets();
     });
-    $("#log-detail-amount-plus").addEventListener("click", () => {
-        const v = (parseInt($("#log-detail-amount").value, 10) || 0) + 5;
-        $("#log-detail-amount").value = v;
+    $("#log-detail-amount-next").addEventListener("click", () => {
+        amountPresetBase = Math.min(MAX_PRESET_BASE, amountPresetBase + 10);
+        renderAmountPresets();
+    });
+
+    // 直接入力したときも、300を超えないようクランプしつつパネルを追従させる
+    $("#log-detail-amount").addEventListener("input", () => {
+        const el = $("#log-detail-amount");
+        const num = parseInt(el.value, 10);
+        if (!Number.isNaN(num) && num > MAX_AMOUNT) el.value = MAX_AMOUNT;
+        centerAmountPresets(el.value);
     });
     $("#custom-edit-close").addEventListener("click", closeCustomEditModal);
     $("#log-panel-toggle").addEventListener("click", toggleLogPanel);

@@ -592,7 +592,9 @@ body {
     margin-top: 7px
 }
 
-.tl .btns button {
+/* 小さめの丸ピルボタン（タイムラインの状態切り替え／Push Gift候補の操作ボタンで共用） */
+.tl .btns button,
+.gift-choose {
     font-size: 11px;
     padding: 3px 9px;
     border-radius: 20px;
@@ -668,7 +670,9 @@ body {
     margin-top: 8px;
 }
 
-.gift-form input {
+/* 入力欄の共通見た目（Push Gift候補フォーム／段取り・当日・手続きの追加欄で共用） */
+.gift-form input,
+.row input {
     height: 36px;
     border: 1px solid #d5d9d4;
     border-radius: 9px;
@@ -676,15 +680,10 @@ body {
     font-size: 16px;
 }
 
-/* 「新しい項目を入力」欄（段取り・当日・手続きタブ共通）。iOSの自動ズーム防止のためfont-sizeを16px以上に */
+/* .row 内の入力欄だけ、残り幅いっぱいに広げる */
 .row input {
     flex: 1;
     min-width: 0;
-    height: 36px;
-    border: 1px solid #d5d9d4;
-    border-radius: 9px;
-    padding: 0 10px;
-    font-size: 16px;
 }
 
 /* Push Gift候補のカード */
@@ -695,17 +694,6 @@ body {
 /* 「本命」に選ばれた候補は、緑の枠で強調する */
 .gift-card.chosen {
     border: 2px solid var(--accent);
-}
-
-/* 「本命に選ぶ／解除」ボタン */
-.gift-choose {
-    font-size: 11px;
-    padding: 3px 9px;
-    border-radius: 20px;
-    border: 1px solid var(--line);
-    background: #fff;
-    color: var(--muted);
-    cursor: pointer;
 }
 
 /* Push Gift候補の価格表示（大きく・アクセントカラーで目立たせる） */
@@ -992,6 +980,33 @@ body {
 
 #log-heading {
     margin-top: 10px;
+}
+
+/* mlパネルの範囲を端まで動かしきったら、‹/›ボタンを押せない見た目にする */
+#log-detail-amount-prev:disabled,
+#log-detail-amount-next:disabled {
+    opacity: .35;
+    cursor: default;
+}
+
+.preset-btn {
+    height: 32px;
+    border: 1px solid #d5d9d4;
+    border-radius: 8px;
+    background: #fff;
+    font-size: 12px;
+    color: var(--ink);
+    cursor: pointer;
+}
+
+.preset-btn.on {
+    border-color: var(--accent);
+    color: var(--accent-dark);
+    font-weight: 600;
+}
+
+.preset-btn:active {
+    background: #f0f1ee;
 }
 
 
