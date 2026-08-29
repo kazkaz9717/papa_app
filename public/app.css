@@ -20,6 +20,11 @@
     --line: #e7e9e6;
     --card: #fff;
     --bg: #f3f5f2;
+    /* 育児記録の回数パネル用に追加した色（ピンク・紫） */
+    --pink-bg: #fbeaf0;
+    --pink-dark: #72243e;
+    --purple-bg: #eeedfe;
+    --purple-dark: #3c3489;
 }
 
 /* 全要素共通：paddingやborderをwidthの内側に含める（サイズ計算をシンプルにする） */
@@ -891,6 +896,43 @@ body {
 .qc-panel-toggle .arrow {
     font-size: 12px;
     color: var(--muted);
+}
+
+/* 育児記録タブの回数パネルだけ、カテゴリごとに色分けする */
+#v-log .stat.milk {
+    background: var(--pink-bg);
+}
+
+#v-log .stat.milk .k,
+#v-log .stat.milk .v {
+    color: var(--pink-dark);
+}
+
+#v-log .stat.meal {
+    background: var(--warn-bg);
+}
+
+#v-log .stat.meal .k,
+#v-log .stat.meal .v {
+    color: var(--warn-dark);
+}
+
+#v-log .stat.toilet {
+    background: var(--accent-bg);
+}
+
+#v-log .stat.toilet .k,
+#v-log .stat.toilet .v {
+    color: var(--accent-dark);
+}
+
+#v-log .stat.sleep {
+    background: var(--purple-bg);
+}
+
+#v-log .stat.sleep .k,
+#v-log .stat.sleep .v {
+    color: var(--purple-dark);
 }
 
 /* モーダル用CSS */

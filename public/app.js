@@ -552,7 +552,9 @@ async function deleteLogEntry(id) {
 }
 
 function openLogDetail(kind, note, existing) {
-    const dateForEntry = existing ? toDateStr(existing.occurred_at) : currentLogDate;
+    // 新規記録は常に「今日」の日付にする（編集時だけ元の日付を保つ）
+    // ※ 過去日を表示中でも、新しく記録するものは必ず今日扱いにする
+    const dateForEntry = existing ? toDateStr(existing.occurred_at) : todayStr();
     logDetailContext = { mode: existing ? "edit" : "create", kind, id: existing?.id, note, date: dateForEntry };
     const isAmount = AMOUNT_KINDS.includes(kind);
     const label = kind === "custom" ? (note || "カスタム") : (LOG_LABEL[kind] || kind);
@@ -594,7 +596,13 @@ async function saveLogDetail() {
     }
     closeLogDetail();
     closeLogPanel();
-    loadLog();
+    // 新規記録は必ず「今日」で保存されるため、今見ている日付が今日でなければ
+    // 今日のログ画面に自動で切り替えて、記録した内容が見えるようにする
+    if (mode === "create" && date !== currentLogDate) {
+        loadLog(date);
+    } else {
+        loadLog();
+    }
 }
 
 async function loadCustomLogLabels() {
