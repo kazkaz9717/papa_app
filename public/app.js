@@ -514,6 +514,7 @@ function openLogDetail(kind, note, existing) {
     $("#log-detail-amount").value = existing?.amount ?? "";
     $("#log-detail-memo").value = existing?.memo ?? "";
     $("#log-detail-modal").hidden = false;
+    if (existing) closeLogPanel();
 }
 
 function closeLogDetail() {
@@ -539,6 +540,7 @@ async function saveLogDetail() {
         await api("PATCH", "/log_entries/" + id, body);
     }
     closeLogDetail();
+    closeLogPanel();
     loadLog();
 }
 
@@ -627,6 +629,12 @@ function toggleLogPanel() {
     body.hidden = !willOpen;
     arrow.textContent = willOpen ? "▴ 閉じる" : "▾ 開く";
     localStorage.setItem("papa_log_panel_open", willOpen ? "1" : "0");
+}
+
+function closeLogPanel() {
+    $("#log-panel-body").hidden = true;
+    $("#log-panel-arrow").textContent = "▾ 開く";
+    localStorage.setItem("papa_log_panel_open", "0");
 }
 
 function initLogPanel() {
