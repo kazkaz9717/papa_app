@@ -914,7 +914,7 @@ body {
     padding: 20px;
 }
 
-#custom-edit-modal[hidden] {
+.modal-overlay[hidden] {
     display: none;
 }
 
@@ -983,6 +983,9 @@ body {
     cursor: pointer;
 }
 
+.modal-row .lbl.editable {
+    cursor: pointer;
+}
 
 
 

@@ -1,5 +1,6 @@
 class LogEntry < ApplicationRecord
   KINDS = %w[milk breast solid meal drink pee poop both sleep_start wake custom].freeze
+  AMOUNT_KINDS = %w[milk breast].freeze
 
   belongs_to :household
   belongs_to :recorded_by, class_name: "User", optional: true

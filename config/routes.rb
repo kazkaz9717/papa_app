@@ -24,7 +24,7 @@ Rails.application.routes.draw do
     end
     # 育休・給付金ステップ：一覧・状態変更
     resources :benefit_steps, only: %i[index update]
-    resources :log_entries, only: %i[index create destroy]
+    resources :log_entries, only: %i[index create update destroy]
     resource :household, only: %i[show update], controller: "household"
     get   "household/custom_log_labels", to: "household#custom_log_labels"
     patch "household/custom_log_labels", to: "household#update_custom_log_labels"

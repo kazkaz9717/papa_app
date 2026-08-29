@@ -401,14 +401,15 @@ async function resetContractions() {
 
 // ===== 育児記録 =====
 const LOG_ICON = {
-    milk: "🍼", breast: "🤱", drink: "🥤", solid: "🍚", meal: "🍽",
+    milk: "🍼", breast: "🤱", solid: "🍚", meal: "🍽", drink: "🥤",
     pee: "💧", poop: "💩", both: "💧💩", sleep_start: "💤", wake: "⏰",
-    custom: "📌", diaper: "👶", sleep: "🌙"
+    custom: "📌"
 };
 const LOG_LABEL = {
-    milk: "ミルク", breast: "母乳", drink: "飲み物", solid: "離乳食", meal: "ごはん",
+    milk: "ミルク", breast: "母乳", solid: "離乳食", meal: "ごはん", drink: "飲み物",
     pee: "おしっこ", poop: "うんち", both: "両方", sleep_start: "寝る", wake: "起きる"
 };
+const AMOUNT_KINDS = ["milk", "breast"];
 
 function escapeHtml(str) {
     return String(str).replace(/[&<>"']/g, c => ({
@@ -427,8 +428,20 @@ function shiftDate(dateStr, days) {
     return d.getFullYear() + "-" + two(d.getMonth() + 1) + "-" + two(d.getDate());
 }
 
+function toTimeStr(isoString) {
+    const d = isoString ? new Date(isoString) : new Date();
+    return two(d.getHours()) + ":" + two(d.getMinutes());
+}
+
+function toDateStr(isoString) {
+    const d = new Date(isoString);
+    return d.getFullYear() + "-" + two(d.getMonth() + 1) + "-" + two(d.getDate());
+}
+
 let currentLogDate = todayStr();
 let customLogLabels = ["", "", "", ""];
+let lastLogEntries = [];
+let logDetailContext = null; // { mode: "create"|"edit", kind, id, note }
 
 async function loadLog(dateStr) {
     currentLogDate = dateStr || currentLogDate;
@@ -441,12 +454,13 @@ async function loadLog(dateStr) {
 }
 
 function renderLog(entries, summary) {
+    lastLogEntries = entries || [];
     $("#sum-milk").textContent = (summary.milk || 0) + "回";
     $("#sum-meal").textContent = (summary.meal || 0) + "回";
     $("#sum-toilet").textContent = (summary.toilet || 0) + "回";
     $("#sum-sleep").textContent = (summary.sleep || 0) + "回";
 
-    $("#log-list").innerHTML = (entries || []).map(e => {
+    $("#log-list").innerHTML = lastLogEntries.map(e => {
         const d = new Date(e.occurred_at);
         const tm = two(d.getHours()) + ":" + two(d.getMinutes());
         const ROLE_CHAR = { husband: "夫", wife: "妻" };
@@ -456,28 +470,75 @@ function renderLog(entries, summary) {
             ? `<span class="who ${roleClass}">${roleChar}</span>`
             : "";
         const label = e.kind === "custom" ? (e.note || "カスタム") : (LOG_LABEL[e.kind] || e.kind);
+        const detail = e.amount ? `${e.amount}ml` : (e.memo || "");
+        const detailHtml = detail ? ` <span style="color:var(--hint); font-size:11px;">(${escapeHtml(detail)})</span>` : "";
         return `<div class="rec" data-id="${e.id}">
             <span class="tm">${tm}</span>
             <span class="ic">${LOG_ICON[e.kind] || "📌"}</span>
-            <span class="txt" style="flex:1;">${escapeHtml(label)}</span>
+            <span class="txt" style="flex:1;">${escapeHtml(label)}${detailHtml}</span>
             ${who}
             <button class="del" data-del-log="${e.id}" title="削除">×</button>
         </div>`;
     }).join("") || `<div class="empty">記録がありません</div>`;
 
     $$("#log-list [data-del-log]").forEach(btn => {
-        btn.addEventListener("click", () => deleteLogEntry(btn.dataset.delLog));
+        btn.addEventListener("click", (ev) => {
+            ev.stopPropagation();
+            deleteLogEntry(btn.dataset.delLog);
+        });
     });
-}
 
-async function addLogEntry(kind, note) {
-    await api("POST", "/log_entries", note ? { kind, note } : { kind });
-    loadLog(todayStr());
+    $$("#log-list .rec").forEach(el => {
+        el.addEventListener("click", () => {
+            const entry = lastLogEntries.find(e => String(e.id) === el.dataset.id);
+            if (entry) openLogDetail(entry.kind, entry.note, entry);
+        });
+    });
 }
 
 async function deleteLogEntry(id) {
     if (!confirm("この記録を削除しますか？")) return;
     await api("DELETE", "/log_entries/" + id);
+    loadLog();
+}
+
+function openLogDetail(kind, note, existing) {
+    const dateForEntry = existing ? toDateStr(existing.occurred_at) : currentLogDate;
+    logDetailContext = { mode: existing ? "edit" : "create", kind, id: existing?.id, note, date: dateForEntry };
+    const isAmount = AMOUNT_KINDS.includes(kind);
+    const label = kind === "custom" ? (note || "カスタム") : (LOG_LABEL[kind] || kind);
+    $("#log-detail-title").textContent = label + (existing ? "を編集" : "を記録");
+    $("#log-detail-time").value = existing ? toTimeStr(existing.occurred_at) : toTimeStr();
+    $("#log-detail-amount-wrap").hidden = !isAmount;
+    $("#log-detail-memo-wrap").hidden = isAmount;
+    $("#log-detail-amount").value = existing?.amount ?? "";
+    $("#log-detail-memo").value = existing?.memo ?? "";
+    $("#log-detail-modal").hidden = false;
+}
+
+function closeLogDetail() {
+    $("#log-detail-modal").hidden = true;
+    logDetailContext = null;
+}
+
+async function saveLogDetail() {
+    if (!logDetailContext) return;
+    const { mode, kind, id, note, date } = logDetailContext;
+    const isAmount = AMOUNT_KINDS.includes(kind);
+    const time = $("#log-detail-time").value || toTimeStr();
+    const body = {
+        occurred_at: date + "T" + time,
+        amount: isAmount ? ($("#log-detail-amount").value || "") : "",
+        memo: isAmount ? "" : ($("#log-detail-memo").value || "")
+    };
+    if (mode === "create") {
+        body.kind = kind;
+        if (note) body.note = note;
+        await api("POST", "/log_entries", body);
+    } else {
+        await api("PATCH", "/log_entries/" + id, body);
+    }
+    closeLogDetail();
     loadLog();
 }
 
@@ -502,7 +563,7 @@ function renderCustomTiles() {
             const i = Number(el.dataset.customIndex);
             const label = customLogLabels[i];
             if (label) {
-                addLogEntry("custom", label);
+                openLogDetail("custom", label);
             } else {
                 openCustomEditModal();
             }
@@ -514,9 +575,18 @@ function renderCustomTiles() {
 function renderCustomEditModal() {
     $("#custom-edit-list").innerHTML = customLogLabels.map((label, i) => {
         return label
-            ? `<div class="modal-row"><span class="lbl">📌 ${escapeHtml(label)}</span><span class="modal-action remove" data-del-idx="${i}">削除</span></div>`
+            ? `<div class="modal-row"><span class="lbl editable" data-edit-idx="${i}">📌 ${escapeHtml(label)}</span><span class="modal-action remove" data-del-idx="${i}">削除</span></div>`
             : `<div class="modal-row"><span class="lbl empty">未設定</span><span class="modal-action add" data-add-idx="${i}">追加</span></div>`;
     }).join("");
+
+    $$("#custom-edit-list [data-edit-idx]").forEach(el => {
+        el.addEventListener("click", async () => {
+            const i = Number(el.dataset.editIdx);
+            const label = prompt("項目名を編集してください", customLogLabels[i]);
+            if (label === null || !label.trim()) return;
+            await saveCustomLabel(i, label.trim());
+        });
+    });
 
     $$("#custom-edit-list [data-add-idx]").forEach(btn => {
         btn.addEventListener("click", async () => {
@@ -548,6 +618,7 @@ function openCustomEditModal() {
 function closeCustomEditModal() {
     $("#custom-edit-modal").hidden = true;
 }
+
 
 function toggleLogPanel() {
     const body = $("#log-panel-body");
@@ -763,7 +834,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#day-add").addEventListener("click", () => addChecklistItem("day", "#day-new", "#day-add"));
     $("#doc-add").addEventListener("click", () => addChecklistItem("procedure", "#doc-new", "#doc-add"));
     $("#gift-add").addEventListener("click", addGift);
-    $$("#v-log .qc .c[data-kind]").forEach(el => el.addEventListener("click", () => addLogEntry(el.dataset.kind)));
+    $$("#v-log .qc .c[data-kind]").forEach(el => el.addEventListener("click", () => openLogDetail(el.dataset.kind)));
+    $("#log-detail-save").addEventListener("click", saveLogDetail);
+    $("#log-detail-cancel").addEventListener("click", closeLogDetail);
+    $("#log-detail-amount-minus").addEventListener("click", () => {
+        const v = Math.max(0, (parseInt($("#log-detail-amount").value, 10) || 0) - 5);
+        $("#log-detail-amount").value = v;
+    });
+    $("#log-detail-amount-plus").addEventListener("click", () => {
+        const v = (parseInt($("#log-detail-amount").value, 10) || 0) + 5;
+        $("#log-detail-amount").value = v;
+    });
     $("#custom-edit-close").addEventListener("click", closeCustomEditModal);
     $("#log-panel-toggle").addEventListener("click", toggleLogPanel);
     $("#log-date").addEventListener("change", () => loadLog($("#log-date").value));

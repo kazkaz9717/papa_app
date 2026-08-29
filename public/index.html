@@ -319,6 +319,42 @@
                     <div class="modal-close" id="custom-edit-close">閉じる</div>
                 </div>
             </div>
+
+            <div id="log-detail-modal" class="modal-overlay" hidden>
+                <div class="modal-panel">
+                    <p class="modal-title" id="log-detail-title">記録</p>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">時刻</label>
+                        <input type="time" id="log-detail-time"
+                            style="width:100%; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px;">
+                    </div>
+
+                    <div id="log-detail-amount-wrap" style="margin-bottom:10px;" hidden>
+                        <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">量</label>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <button type="button" id="log-detail-amount-minus" class="date-nav">－</button>
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="log-detail-amount"
+                                placeholder="120"
+                                style="flex:1; min-width:0; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; text-align:center;">
+                            <button type="button" id="log-detail-amount-plus" class="date-nav">＋</button>
+                            <span style="flex:0 0 auto; font-size:13px; color:var(--muted);">ml</span>
+                        </div>
+                    </div>
+
+                    <div id="log-detail-memo-wrap" style="margin-bottom:10px;" hidden>
+                        <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">メモ</label>
+                        <input type="text" id="log-detail-memo" placeholder="メモ（任意）"
+                            style="width:100%; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px;">
+                    </div>
+
+                    <div style="display:flex; gap:8px; margin-top:12px;">
+                        <button class="btn" id="log-detail-save"
+                            style="flex:1; background:var(--accent); color:#fff;">保存</button>
+                        <button class="gift-choose" id="log-detail-cancel">キャンセル</button>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
