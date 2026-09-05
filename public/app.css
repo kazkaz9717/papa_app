@@ -490,6 +490,32 @@ body {
     margin: 2px 0 0
 }
 
+/* 排泄パネルは表示量が少ないため、他の2つより幅を狭める */
+.stat.narrow {
+    flex: 0.7;
+}
+
+/* 授乳・哺乳瓶・排泄パネルの内訳（右/左/計、母乳/ミルクなど）の行 */
+.stat-line {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 10px;
+    color: var(--muted);
+    margin: 3px 2px 0;
+    text-align: left;
+}
+
+.stat-line b {
+    color: var(--ink);
+    font-weight: 600;
+    font-size: 10px;
+}
+
+.stat-line.total b {
+    color: var(--accent-dark);
+}
+
 /* お知らせバナー（通常メッセージ／病院連絡アラート） */
 .banner {
     border-radius: 11px;

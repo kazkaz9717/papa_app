@@ -517,10 +517,21 @@ async function loadLog(dateStr) {
 
 function renderLog(entries, summary) {
     lastLogEntries = entries || [];
-    $("#sum-milk").textContent = (summary.milk || 0) + "回";
-    $("#sum-meal").textContent = (summary.meal || 0) + "回";
-    $("#sum-toilet").textContent = (summary.toilet || 0) + "回";
-    $("#sum-sleep").textContent = (summary.sleep || 0) + "回";
+    // 授乳(右/左/計)・哺乳瓶(回数+母乳/ミルクml)・排泄(おしっこ/うんち)の3パネルに反映する
+    const bf = summary.breastfeeding || { left: {}, right: {}, total: {} };
+    const bottle = summary.bottle || {};
+    const toilet = summary.toilet || {};
+
+    $("#sum-breast-right").textContent = `${bf.right?.count || 0}回/${formatSec(bf.right?.seconds || 0)}`;
+    $("#sum-breast-left").textContent = `${bf.left?.count || 0}回/${formatSec(bf.left?.seconds || 0)}`;
+    $("#sum-breast-total").textContent = `${bf.total?.count || 0}回/${formatSec(bf.total?.seconds || 0)}`;
+
+    $("#sum-bottle-count").textContent = `${bottle.count || 0}回`;
+    $("#sum-bottle-breast").textContent = `${bottle.breast_ml || 0}ml`;
+    $("#sum-bottle-formula").textContent = `${bottle.formula_ml || 0}ml`;
+
+    $("#sum-pee").textContent = `${toilet.pee || 0}回`;
+    $("#sum-poop").textContent = `${toilet.poop || 0}回`;
 
     $("#log-list").innerHTML = lastLogEntries.map(e => {
         const d = new Date(e.occurred_at);
