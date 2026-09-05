@@ -1000,14 +1000,14 @@ body {
 #v-log .stat.milk .stat-line b {
     display: inline-block;
     width: 92px;
-    text-align: left;
+    text-align: center;
     white-space: nowrap;
 }
 
 #v-log .stat.meal .stat-line b {
     display: inline-block;
     width: 44px;
-    text-align: left;
+    text-align: center;
     white-space: nowrap;
 }
 
