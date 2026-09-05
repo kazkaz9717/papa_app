@@ -968,12 +968,27 @@ body {
 /* 右/左・母乳/ミルクのラベル幅を揃えて、数値の開始位置を統一する */
 #v-log .stat-line .stat-label {
     display: inline-block;
-    width: 16px;
+    width: 24px;
     text-align: left;
 }
 
 #v-log .stat-line .stat-label.wide {
     width: 48px;
+}
+
+/* 数値の桁が変わっても位置がずれないよう、値の表示幅を固定する */
+#v-log .stat.milk .stat-line b {
+    display: inline-block;
+    width: 92px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+#v-log .stat.meal .stat-line b {
+    display: inline-block;
+    width: 44px;
+    text-align: left;
+    white-space: nowrap;
 }
 
 /* 排泄パネルは合計値がない分、内訳(💧💩)を見出しと同じ太さ・大きさにして目立たせる */
@@ -1074,6 +1089,14 @@ body {
     padding-top: 10px;
     margin-top: 10px;
     cursor: pointer;
+}
+
+/* ログ空欄タップ時のポップアップ：記録項目を3列グリッドで並べる */
+.tile-picker-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 4px;
 }
 
 .modal-row .lbl.editable {

@@ -549,16 +549,14 @@ function renderLog(entries, summary) {
             const parts = [];
             if (e.breast_ml) parts.push(`母乳${e.breast_ml}ml`);
             if (e.formula_ml) parts.push(`ミルク${e.formula_ml}ml`);
-            detail = parts.join("/") || e.memo || "";
+            detail = parts.join(" / ") || e.memo || "";
         } else if (e.kind === "breast_left" || e.kind === "breast_right") {
             detail = formatSec(e.duration_sec || 0) + (e.memo ? ` ${e.memo}` : "");
         } else if (e.kind === "pump") {
             const parts = [];
             if (e.duration_sec) parts.push(`${Math.round(e.duration_sec / 60)}分`);
             if (e.amount) parts.push(`${e.amount}ml`);
-            detail = parts.join("/") || e.memo || "";
-        } else {
-            detail = e.amount ? `${e.amount}ml` : (e.memo || "");
+            detail = parts.join(" / ") || e.memo || "";
         }
         const detailHtml = detail ? ` <span style="color:var(--hint); font-size:11px;">(${escapeHtml(detail)})</span>` : "";
         return `<div class="rec" data-id="${e.id}">
@@ -641,6 +639,15 @@ function renderBreastTimers() {
 
 // 左右どちらかのタイマーを開始/停止する
 function toggleBreastTimer(side) {
+    const other = side === "left" ? "right" : "left";
+
+    // 反対側が動いていたら先に止める（左右同時計測を防ぐ）
+    if (breastTimers[other].running) {
+        breastTimers[other].accumulatedSec += Math.floor((Date.now() - breastTimers[other].startedAt) / 1000);
+        breastTimers[other].running = false;
+        breastTimers[other].startedAt = null;
+    }
+
     const t = breastTimers[side];
     if (t.running) {
         t.accumulatedSec += Math.floor((Date.now() - t.startedAt) / 1000);
@@ -1056,6 +1063,29 @@ function closeCustomEditModal() {
     $("#custom-edit-modal").hidden = true;
 }
 
+// ログ一覧の空欄部分をタップした時に出す、記録項目の3×6グリッドポップアップ
+function openTilePicker() {
+    const grid = $("#tile-picker-grid");
+    // 既存の#log-tilesのタイルをそのまま複製する（アイコン・ラベル・並び順を二重管理しないため）
+    grid.innerHTML = $$("#log-tiles .c[data-kind]").map(el => el.outerHTML).join("");
+
+    $$("#tile-picker-grid .c[data-kind]").forEach(cloneEl => {
+        cloneEl.addEventListener("click", () => {
+            const kind = cloneEl.dataset.kind;
+            closeTilePicker();
+            // 複製ではなく本物のタイルをクリックしたことにして、既存の記録処理をそのまま使う
+            const original = $(`#log-tiles .c[data-kind="${kind}"]`);
+            if (original) original.click();
+        });
+    });
+
+    $("#tile-picker-modal").hidden = false;
+}
+
+function closeTilePicker() {
+    $("#tile-picker-modal").hidden = true;
+}
+
 
 // ===== お金（育休・給付金）=====
 
@@ -1307,6 +1337,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         centerAmountPresets(el.value);
     });
     $("#custom-edit-close").addEventListener("click", closeCustomEditModal);
+    // ログ一覧の空欄部分（行以外の場所）をタップしたらタイル選択ポップアップを開く
+    $("#log-list").addEventListener("click", (ev) => {
+        if (!ev.target.closest(".rec")) openTilePicker();
+    });
+    $("#tile-picker-close").addEventListener("click", closeTilePicker);
     $("#log-date").addEventListener("change", () => loadLog($("#log-date").value));
     $("#log-today-btn").addEventListener("click", () => loadLog(todayStr()));
     $("#log-prev").addEventListener("click", () => loadLog(shiftDate(currentLogDate, -1)));

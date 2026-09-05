@@ -175,9 +175,9 @@
                             <div class="stat milk">
                                 <p class="k">授乳</p>
                                 <p class="v" id="sum-breast-total">0回 / 0分0秒</p>
-                                <p class="stat-line"><span class="stat-label">左</span><b id="sum-breast-left">0回 /
+                                <p class="stat-line"><span class="stat-label">左：</span><b id="sum-breast-left">0回 /
                                         0分0秒</b></p>
-                                <p class="stat-line"><span class="stat-label">右</span><b id="sum-breast-right">0回 /
+                                <p class="stat-line"><span class="stat-label">右：</span><b id="sum-breast-right">0回 /
                                         0分0秒</b></p>
                             </div>
                             <div class="stat meal">
@@ -435,6 +435,13 @@
                             style="flex:1; background:var(--accent); color:#fff;">保存</button>
                         <button class="gift-choose" id="bottle-cancel">キャンセル</button>
                     </div>
+                </div>
+            </div>
+            <div class="modal-overlay" id="tile-picker-modal" hidden>
+                <div class="modal-panel">
+                    <p class="modal-title">記録する項目を選択</p>
+                    <div class="tile-picker-grid" id="tile-picker-grid"></div>
+                    <p class="modal-close" id="tile-picker-close">閉じる</p>
                 </div>
             </div>
             <div id="breastfeeding-modal" class="modal-overlay" hidden>
