@@ -557,6 +557,8 @@ function renderLog(entries, summary) {
             if (e.duration_sec) parts.push(`${Math.round(e.duration_sec / 60)}分`);
             if (e.amount) parts.push(`${e.amount}ml`);
             detail = parts.join(" / ") || e.memo || "";
+        } else {
+            detail = e.amount ? `${e.amount}ml` : (e.memo || "");
         }
         const detailHtml = detail ? ` <span style="color:var(--hint); font-size:11px;">(${escapeHtml(detail)})</span>` : "";
         return `<div class="rec" data-id="${e.id}">
@@ -1007,7 +1009,7 @@ async function loadCustomLogLabels() {
 // カスタムのモーダル内：ラベルをタップ→記録、削除→削除、末尾の「＋追加」→新規追加
 function renderCustomEditModal() {
     const rows = customLogLabels.map((label, i) =>
-        `<div class="modal-row">
+        `<div class="modal-row" data-label="${escapeHtml(label)}">
             <span class="lbl editable" data-record-idx="${i}">📌 ${escapeHtml(label)}</span>
             <span class="modal-action remove" data-del-idx="${i}">削除</span>
         </div>`
@@ -1061,6 +1063,97 @@ function openCustomEditModal() {
 
 function closeCustomEditModal() {
     $("#custom-edit-modal").hidden = true;
+}
+
+let suppressNextCustomClick = false; // カスタム並び替え直後のクリックを1回だけ無効化するためのフラグ
+
+// 今のカスタム項目の並び順を取得してサーバーに保存する（家族全員に共有される）
+async function saveCustomLabelOrder() {
+    const order = $$("#custom-edit-list .modal-row[data-label]").map(el => el.dataset.label);
+    try {
+        const data = await api("PATCH", "/household/custom_log_labels", { reorder: order });
+        customLogLabels = data.custom_log_labels;
+        renderCustomEditModal(); // インデックスがずれないよう並び替え後に描画し直す
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+// 長押し(350ms)でドラッグ開始、指を動かすと項目の位置が入れ替わる（縦並び版）
+function initCustomReorder() {
+    const container = $("#custom-edit-list");
+    if (!container) return;
+
+    let pressTimer = null;
+    let dragEl = null;
+    let longPressTriggered = false;
+    let startX = 0, startY = 0;
+
+    function rowAt(y) {
+        return $$("#custom-edit-list .modal-row[data-label]").find(el => {
+            if (el === dragEl) return false;
+            const r = el.getBoundingClientRect();
+            return y >= r.top && y <= r.bottom;
+        });
+    }
+
+    function endDrag() {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+        if (dragEl) {
+            dragEl.classList.remove("dragging");
+            if (longPressTriggered) {
+                saveCustomLabelOrder();
+                suppressNextCustomClick = true;
+            }
+        }
+        dragEl = null;
+        longPressTriggered = false;
+    }
+
+    container.addEventListener("pointerdown", (ev) => {
+        const row = ev.target.closest(".modal-row[data-label]");
+        if (!row) return;
+        startX = ev.clientX;
+        startY = ev.clientY;
+        longPressTriggered = false;
+        clearTimeout(pressTimer);
+        pressTimer = setTimeout(() => {
+            longPressTriggered = true;
+            dragEl = row;
+            dragEl.classList.add("dragging");
+        }, 350);
+    });
+
+    container.addEventListener("pointermove", (ev) => {
+        if (pressTimer && !longPressTriggered) {
+            if (Math.abs(ev.clientX - startX) > 8 || Math.abs(ev.clientY - startY) > 8) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
+            }
+            return;
+        }
+        if (!dragEl) return;
+        ev.preventDefault();
+        const target = rowAt(ev.clientY);
+        if (target) {
+            const rect = target.getBoundingClientRect();
+            const before = ev.clientY < rect.top + rect.height / 2;
+            container.insertBefore(dragEl, before ? target : target.nextSibling);
+        }
+    });
+
+    container.addEventListener("pointerup", endDrag);
+    container.addEventListener("pointercancel", endDrag);
+
+    // 並び替え直後の1回だけクリックを無効化する（記録や削除が誤って走らないように）
+    container.addEventListener("click", (ev) => {
+        if (suppressNextCustomClick) {
+            ev.stopPropagation();
+            ev.preventDefault();
+            suppressNextCustomClick = false;
+        }
+    }, true);
 }
 
 // ログ一覧の空欄部分をタップした時に出す、記録項目の3×6グリッドポップアップ
@@ -1262,6 +1355,7 @@ document.addEventListener("focusout", (e) => {
 document.addEventListener("DOMContentLoaded", async () => {
     setupTabs();
     initTileReorder();
+    initCustomReorder();
     $("#btn-submit").addEventListener("click", submitAuth);
     // 「ログイン⇄新規登録」の切り替え
     $("#toggle-auth").addEventListener("click", () => {

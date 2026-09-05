@@ -43,20 +43,22 @@ module Api
       render json: { custom_log_labels: current_household.custom_log_labels.reject(&:blank?) }
     end
 
-    # label指定なら末尾に追加、remove_index指定ならその位置を削除する
-    # （固定4枠をやめて、いくつでも追加できるようにした）
+    # label指定なら末尾に追加、remove_index指定ならその位置を削除、reorder指定なら並び順をまるごと差し替える
     def update_custom_log_labels
-      labels = current_household.custom_log_labels.reject(&:blank?)
+        labels = current_household.custom_log_labels.reject(&:blank?)
 
-      if params[:remove_index].present?
-        index = params[:remove_index].to_i
-        labels.delete_at(index) if index.between?(0, labels.length - 1)
-      elsif params[:label].present?
-        labels << params[:label].to_s.strip
-      end
+        if params[:remove_index].present?
+            index = params[:remove_index].to_i
+            labels.delete_at(index) if index.between?(0, labels.length - 1)
+        elsif params[:label].present?
+            labels << params[:label].to_s.strip
+        elsif params[:reorder].is_a?(Array)
+            # 家族で共有する項目なので、並び順もそのまま家族全員に反映される
+            labels = params[:reorder].map(&:to_s).reject(&:blank?)
+        end
 
-      current_household.update!(custom_log_labels: labels)
-      render json: { custom_log_labels: current_household.custom_log_labels }
+        current_household.update!(custom_log_labels: labels)
+        render json: { custom_log_labels: current_household.custom_log_labels }
     end
 
     private

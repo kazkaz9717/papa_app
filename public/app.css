@@ -886,6 +886,18 @@ body {
     z-index: 2;
 }
 
+/* カスタム項目の並び替え中の見た目 */
+.modal-row {
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.modal-row.dragging {
+    opacity: .6;
+    background: #f7f8f6;
+}
+
 .qc .c.empty {
     border-style: dashed;
     color: var(--hint);
