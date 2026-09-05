@@ -20,11 +20,9 @@
     --line: #e7e9e6;
     --card: #fff;
     --bg: #f3f5f2;
-    /* 育児記録の回数パネル用に追加した色（ピンク・紫） */
+    /* 育児記録の回数パネル用に追加した色（ピンク） */
     --pink-bg: #fbeaf0;
     --pink-dark: #72243e;
-    --purple-bg: #eeedfe;
-    --purple-dark: #3c3489;
 }
 
 /* 全要素共通：paddingやborderをwidthの内側に含める（サイズ計算をシンプルにする） */
@@ -495,6 +493,15 @@ body {
     flex: 0.7;
 }
 
+/* 授乳は文字数が多いので少し広げ、その分哺乳瓶を少し狭める */
+.stat.milk {
+    flex: 1.15;
+}
+
+.stat.meal {
+    flex: 0.9;
+}
+
 /* 授乳・哺乳瓶・排泄パネルの内訳（右/左/計、母乳/ミルクなど）の行 */
 .stat-line {
     display: flex;
@@ -510,11 +517,6 @@ body {
     color: var(--ink);
     font-weight: 600;
     font-size: 12px;
-}
-
-/* 授乳の「計」は文字数が多いので、通常の.vより少し小さくする */
-.stat .v.compact {
-    font-size: 14px;
 }
 
 /* お知らせバナー（通常メッセージ／病院連絡アラート） */
@@ -873,6 +875,15 @@ body {
     padding: 7px 2px;
     text-align: center;
     cursor: pointer;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-touch-callout: none;
+}
+
+.qc .c.dragging {
+    opacity: .6;
+    transform: scale(1.05);
+    z-index: 2;
 }
 
 .qc .c.empty {
@@ -920,7 +931,9 @@ body {
 }
 
 #v-log .stat.milk .k,
-#v-log .stat.milk .v {
+#v-log .stat.milk .v,
+#v-log .stat.milk .stat-line,
+#v-log .stat.milk .stat-line b {
     color: var(--pink-dark);
 }
 
@@ -929,7 +942,9 @@ body {
 }
 
 #v-log .stat.meal .k,
-#v-log .stat.meal .v {
+#v-log .stat.meal .v,
+#v-log .stat.meal .stat-line,
+#v-log .stat.meal .stat-line b {
     color: var(--warn-dark);
 }
 
@@ -938,17 +953,46 @@ body {
 }
 
 #v-log .stat.toilet .k,
-#v-log .stat.toilet .v {
+#v-log .stat.toilet .v,
+#v-log .stat.toilet .stat-line,
+#v-log .stat.toilet .stat-line b {
     color: var(--accent-dark);
 }
 
-#v-log .stat.sleep {
-    background: var(--purple-bg);
+/* 記録タブの回数パネル(v3)：内訳を中央寄せにする */
+#v-log .stat-line {
+    justify-content: center;
+    text-align: center;
 }
 
-#v-log .stat.sleep .k,
-#v-log .stat.sleep .v {
-    color: var(--purple-dark);
+/* 右/左・母乳/ミルクのラベル幅を揃えて、数値の開始位置を統一する */
+#v-log .stat-line .stat-label {
+    display: inline-block;
+    width: 16px;
+    text-align: left;
+}
+
+#v-log .stat-line .stat-label.wide {
+    width: 48px;
+}
+
+/* 排泄パネルは合計値がない分、内訳(💧💩)を見出しと同じ太さ・大きさにして目立たせる */
+#v-log .stat-line.big {
+    font-size: 16px;
+    font-weight: 700;
+    margin-top: 6px;
+}
+
+#v-log .stat-line.big b {
+    font-weight: 700;
+    font-size: 16px;
+}
+
+/* 記録タブの見出し（授乳/哺乳瓶/排泄）だけ太く大きくする */
+#v-log .stat .k {
+    font-size: 13px;
+    font-weight: 700;
+    margin: 0 0 4px;
 }
 
 /* モーダル用CSS */

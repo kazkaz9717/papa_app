@@ -86,6 +86,7 @@ function enterApp() {
     loadBenefits();
     loadLog();
     loadCustomLogLabels();
+    applyTileOrder();
 }
 function signOut() { Token.set(null); location.reload(); }
 
@@ -522,11 +523,11 @@ function renderLog(entries, summary) {
     const bottle = summary.bottle || {};
     const toilet = summary.toilet || {};
 
-    $("#sum-breast-right").textContent = `${bf.right?.count || 0}回/${formatSec(bf.right?.seconds || 0)}`;
-    $("#sum-breast-left").textContent = `${bf.left?.count || 0}回/${formatSec(bf.left?.seconds || 0)}`;
-    $("#sum-breast-total").textContent = `${bf.total?.count || 0}回/${formatSec(bf.total?.seconds || 0)}`;
+    $("#sum-breast-total").textContent = `${bf.total.count || 0}回 / ${formatMinSec(bf.total.seconds)}`;
+    $("#sum-breast-right").textContent = `${bf.right.count || 0}回 / ${formatMinSec(bf.right.seconds)}`;
+    $("#sum-breast-left").textContent = `${bf.left.count || 0}回 / ${formatMinSec(bf.left.seconds)}`;
 
-    $("#sum-bottle-count").textContent = `${bottle.count || 0}回`;
+    $("#sum-bottle-count").textContent = `🍼 ${bottle.count || 0}回`;
     $("#sum-bottle-breast").textContent = `${bottle.breast_ml || 0}ml`;
     $("#sum-bottle-formula").textContent = `${bottle.formula_ml || 0}ml`;
 
@@ -604,6 +605,14 @@ function formatSec(totalSec) {
     const m = Math.floor(totalSec / 60);
     const s = totalSec % 60;
     return two(m) + ":" + two(s);
+}
+
+// 統計パネル用：合計時間を「○分○秒」形式で表示する（授乳タイマー自体はmm:ssのまま）
+function formatMinSec(totalSec) {
+    const sec = Math.max(0, Math.floor(totalSec || 0));
+    const m = Math.floor(sec / 60);
+    const s = sec % 60;
+    return `${m}分${s}秒`;
 }
 
 let breastfeedContext = null; // { mode, editKind, editId, date }
@@ -844,6 +853,109 @@ function openLogDetail(kind, note, existing) {
     $("#log-detail-temperature").value = existing?.temperature ?? "";
     $("#log-detail-memo").value = existing?.memo ?? "";
     $("#log-detail-modal").hidden = false;
+}
+
+let suppressNextTileClick = false; // 並び替え直後のクリックを1回だけ無効化するためのフラグ
+
+// 保存されている並び順(ME.user.tile_order)があれば、その通りにタイルを並べ替える
+function applyTileOrder() {
+    const order = ME?.user?.tile_order;
+    if (!order || !order.length) return;
+    const container = $("#log-tiles");
+    if (!container) return;
+    order.forEach(kind => {
+        const el = container.querySelector(`.c[data-kind="${kind}"]`);
+        if (el) container.appendChild(el);
+    });
+}
+
+// 今のタイルの並び順を取得してサーバーに保存する
+async function saveTileOrder() {
+    const order = $$("#log-tiles .c[data-kind]").map(el => el.dataset.kind);
+    if (ME?.user) ME.user.tile_order = order;
+    try {
+        await api("PATCH", "/me/tile_order", { tile_order: order });
+    } catch (e) {
+        console.error(e);
+    }
+}
+
+// 長押し(350ms)でドラッグ開始、指を動かすとタイルの位置が入れ替わる
+function initTileReorder() {
+    const container = $("#log-tiles");
+    if (!container) return;
+
+    let pressTimer = null;
+    let dragEl = null;
+    let longPressTriggered = false;
+    let startX = 0, startY = 0;
+
+    function tileAt(x, y) {
+        return $$("#log-tiles .c[data-kind]").find(el => {
+            if (el === dragEl) return false;
+            const r = el.getBoundingClientRect();
+            return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
+        });
+    }
+
+    function endDrag() {
+        clearTimeout(pressTimer);
+        pressTimer = null;
+        if (dragEl) {
+            dragEl.classList.remove("dragging");
+            if (longPressTriggered) {
+                saveTileOrder();
+                suppressNextTileClick = true;
+            }
+        }
+        dragEl = null;
+        longPressTriggered = false;
+    }
+
+    container.addEventListener("pointerdown", (ev) => {
+        const tile = ev.target.closest(".c[data-kind]");
+        if (!tile) return;
+        startX = ev.clientX;
+        startY = ev.clientY;
+        longPressTriggered = false;
+        clearTimeout(pressTimer);
+        pressTimer = setTimeout(() => {
+            longPressTriggered = true;
+            dragEl = tile;
+            dragEl.classList.add("dragging");
+        }, 350);
+    });
+
+    container.addEventListener("pointermove", (ev) => {
+        if (pressTimer && !longPressTriggered) {
+            // 指が動きすぎたら長押し判定をやめる（横スクロール操作として扱う）
+            if (Math.abs(ev.clientX - startX) > 8 || Math.abs(ev.clientY - startY) > 8) {
+                clearTimeout(pressTimer);
+                pressTimer = null;
+            }
+            return;
+        }
+        if (!dragEl) return;
+        ev.preventDefault();
+        const target = tileAt(ev.clientX, ev.clientY);
+        if (target) {
+            const rect = target.getBoundingClientRect();
+            const before = ev.clientX < rect.left + rect.width / 2;
+            container.insertBefore(dragEl, before ? target : target.nextSibling);
+        }
+    });
+
+    container.addEventListener("pointerup", endDrag);
+    container.addEventListener("pointercancel", endDrag);
+
+    // 並び替え直後の1回だけクリックを無効化する（記録モーダルが誤って開かないように）
+    container.addEventListener("click", (ev) => {
+        if (suppressNextTileClick) {
+            ev.stopPropagation();
+            ev.preventDefault();
+            suppressNextTileClick = false;
+        }
+    }, true);
 }
 
 function closeLogDetail() {
@@ -1119,6 +1231,7 @@ document.addEventListener("focusout", (e) => {
 // ===== 起動時の処理 =====
 document.addEventListener("DOMContentLoaded", async () => {
     setupTabs();
+    initTileReorder();
     $("#btn-submit").addEventListener("click", submitAuth);
     // 「ログイン⇄新規登録」の切り替え
     $("#toggle-auth").addEventListener("click", () => {
