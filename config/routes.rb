@@ -17,6 +17,7 @@ Rails.application.routes.draw do
     post "login",  to: "auth#login"
     post "guest_login", to: "auth#guest_login"
     get  "me",     to: "auth#me"
+    patch "me/tile_order", to: "auth#update_tile_order"
     resources :checklist_items, only: %i[index create update destroy]
     # 陣痛の記録：一覧・記録・取り消し ＋ リセット
     resources :contraction_events, only: %i[index create destroy] do

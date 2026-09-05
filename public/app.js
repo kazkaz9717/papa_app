@@ -882,69 +882,56 @@ async function saveLogDetail() {
 
 async function loadCustomLogLabels() {
     const data = await api("GET", "/household/custom_log_labels");
-    customLogLabels = data.custom_log_labels || ["", "", "", ""];
-    renderCustomTiles();
+    customLogLabels = data.custom_log_labels || [];
 }
 
-function renderCustomTiles() {
-    const tiles = customLogLabels.map((label, i) => {
-        if (label) {
-            return `<div class="c" data-custom-index="${i}"><div class="ic">📌</div><p class="k">${escapeHtml(label)}</p></div>`;
-        }
-        return `<div class="c empty" data-custom-index="${i}"><div class="ic">－</div><p class="k">未設定</p></div>`;
-    }).join("");
-    const editTile = `<div class="c" id="custom-edit-open"><div class="ic">✎</div><p class="k">編集</p></div>`;
-    $("#log-custom-tiles").innerHTML = tiles + editTile;
-
-    $$("#log-custom-tiles [data-custom-index]").forEach(el => {
-        el.addEventListener("click", () => {
-            const i = Number(el.dataset.customIndex);
-            const label = customLogLabels[i];
-            if (label) {
-                openLogDetail("custom", label);
-            } else {
-                openCustomEditModal();
-            }
-        });
-    });
-    $("#custom-edit-open").addEventListener("click", openCustomEditModal);
-}
-
+// カスタムのモーダル内：ラベルをタップ→記録、削除→削除、末尾の「＋追加」→新規追加
 function renderCustomEditModal() {
-    $("#custom-edit-list").innerHTML = customLogLabels.map((label, i) => {
-        return label
-            ? `<div class="modal-row"><span class="lbl editable" data-edit-idx="${i}">📌 ${escapeHtml(label)}</span><span class="modal-action remove" data-del-idx="${i}">削除</span></div>`
-            : `<div class="modal-row"><span class="lbl empty">未設定</span><span class="modal-action add" data-add-idx="${i}">追加</span></div>`;
-    }).join("");
+    const rows = customLogLabels.map((label, i) =>
+        `<div class="modal-row">
+            <span class="lbl editable" data-record-idx="${i}">📌 ${escapeHtml(label)}</span>
+            <span class="modal-action remove" data-del-idx="${i}">削除</span>
+        </div>`
+    ).join("");
+    const addRow = `<div class="modal-row" style="justify-content:center;">
+        <span class="modal-action add" id="custom-add-btn">＋ 追加</span>
+    </div>`;
+    $("#custom-edit-list").innerHTML = rows + addRow;
 
-    $$("#custom-edit-list [data-edit-idx]").forEach(el => {
-        el.addEventListener("click", async () => {
-            const i = Number(el.dataset.editIdx);
-            const label = prompt("項目名を編集してください", customLogLabels[i]);
-            if (label === null || !label.trim()) return;
-            await saveCustomLabel(i, label.trim());
+    // ラベル部分をタップ → その項目を記録する
+    $$("#custom-edit-list [data-record-idx]").forEach(el => {
+        el.addEventListener("click", () => {
+            const i = Number(el.dataset.recordIdx);
+            const label = customLogLabels[i];
+            closeCustomEditModal();
+            openLogDetail("custom", label);
         });
     });
 
-    $$("#custom-edit-list [data-add-idx]").forEach(btn => {
-        btn.addEventListener("click", async () => {
-            const label = prompt("項目名を入力してください（例: 体温測定）");
-            if (!label || !label.trim()) return;
-            await saveCustomLabel(Number(btn.dataset.addIdx), label.trim());
-        });
-    });
     $$("#custom-edit-list [data-del-idx]").forEach(btn => {
-        btn.addEventListener("click", async () => {
+        btn.addEventListener("click", async (ev) => {
+            ev.stopPropagation();
             if (!confirm("この項目を削除しますか？")) return;
-            await saveCustomLabel(Number(btn.dataset.delIdx), "");
+            await removeCustomLabel(Number(btn.dataset.delIdx));
         });
+    });
+
+    $("#custom-add-btn").addEventListener("click", async () => {
+        const label = prompt("項目名を入力してください（例: 体温測定）");
+        if (!label || !label.trim()) return;
+        await addCustomLabel(label.trim());
     });
 }
 
-async function saveCustomLabel(index, label) {
-    const data = await api("PATCH", "/household/custom_log_labels", { index, label });
+async function addCustomLabel(label) {
+    const data = await api("PATCH", "/household/custom_log_labels", { label });
     customLogLabels = data.custom_log_labels;
-    renderCustomTiles();
+    renderCustomEditModal();
+}
+
+async function removeCustomLabel(index) {
+    const data = await api("PATCH", "/household/custom_log_labels", { remove_index: index });
+    customLogLabels = data.custom_log_labels;
     renderCustomEditModal();
 }
 
@@ -1157,7 +1144,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#gift-add").addEventListener("click", addGift);
     // breastfeeding(授乳)・bottle(哺乳瓶)・pump(搾乳器)は専用モーダルを別のフェーズで実装するため、
     // ここでは通常の記録モーダル(openLogDetail)を使う項目だけにクリックを登録する
-    const SPECIAL_TILE_KINDS = ["breastfeeding", "bottle", "pump"];
+    const SPECIAL_TILE_KINDS = ["breastfeeding", "bottle", "pump", "custom-menu"];
     $$("#log-tiles .c[data-kind]").forEach(el => {
         const kind = el.dataset.kind;
         if (SPECIAL_TILE_KINDS.includes(kind)) return;
@@ -1178,6 +1165,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#breastfeeding-save").addEventListener("click", saveBreastfeedingDetail);
     $("#breastfeeding-cancel").addEventListener("click", closeBreastfeedingDetail);
     $$("#log-tiles .c[data-kind='pump']").forEach(el => el.addEventListener("click", () => openPumpDetail()));
+    $$("#log-tiles .c[data-kind='custom-menu']").forEach(el => el.addEventListener("click", openCustomEditModal));
     $("#pump-save").addEventListener("click", savePumpDetail);
     $("#pump-cancel").addEventListener("click", closePumpDetail);
     $("#pump-duration-minus").addEventListener("click", () => adjustPumpValue("#pump-duration", -1, 180));

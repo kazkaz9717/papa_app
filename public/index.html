@@ -174,9 +174,9 @@
                         <div class="stats">
                             <div class="stat milk">
                                 <p class="k">授乳</p>
+                                <p class="v compact" id="sum-breast-total">0回/0:00</p>
                                 <p class="stat-line">右 <b id="sum-breast-right">0回/0:00</b></p>
                                 <p class="stat-line">左 <b id="sum-breast-left">0回/0:00</b></p>
-                                <p class="stat-line total">計 <b id="sum-breast-total">0回/0:00</b></p>
                             </div>
                             <div class="stat meal">
                                 <p class="k">哺乳瓶</p>
@@ -266,7 +266,10 @@
                                 <div class="ic">🤮</div>
                                 <p class="k">吐く</p>
                             </div>
-                            <span id="log-custom-tiles" style="display:contents;"></span>
+                            <div class="c" data-kind="custom-menu">
+                                <div class="ic">📌</div>
+                                <p class="k">カスタム</p>
+                            </div>
                         </div>
                     </div>
                 </section>
@@ -331,7 +334,7 @@
             </nav>
             <div id="custom-edit-modal" class="modal-overlay" hidden>
                 <div class="modal-panel">
-                    <p class="modal-title">カスタム項目の編集</p>
+                    <p class="modal-title">カスタム</p>
                     <div id="custom-edit-list"></div>
                     <div class="modal-close" id="custom-edit-close">閉じる</div>
                 </div>

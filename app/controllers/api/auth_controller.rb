@@ -47,12 +47,18 @@ module Api
       render json: payload(current_user)
     end
 
+    # タイルの並び順を保存する（ユーザーごと、他のメンバーには影響しない）
+    def update_tile_order
+      current_user.update!(tile_order: params[:tile_order] || [])
+      render json: { tile_order: current_user.tile_order }
+    end
+
     private
 
     def payload(user)
       {
         token: user.api_token,
-        user: { id: user.id, name: user.name, email: user.email, role: user.role, owner: user.owner },
+        user: { id: user.id, name: user.name, email: user.email, role: user.role, owner: user.owner, tile_order: user.tile_order },
         household: household_json(user.household)
       }
     end

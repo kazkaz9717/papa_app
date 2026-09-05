@@ -498,9 +498,9 @@ body {
 /* 授乳・哺乳瓶・排泄パネルの内訳（右/左/計、母乳/ミルクなど）の行 */
 .stat-line {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 10px;
+    gap: 4px;
+    align-items: baseline;
+    font-size: 12px;
     color: var(--muted);
     margin: 3px 2px 0;
     text-align: left;
@@ -509,11 +509,12 @@ body {
 .stat-line b {
     color: var(--ink);
     font-weight: 600;
-    font-size: 10px;
+    font-size: 12px;
 }
 
-.stat-line.total b {
-    color: var(--accent-dark);
+/* 授乳の「計」は文字数が多いので、通常の.vより少し小さくする */
+.stat .v.compact {
+    font-size: 14px;
 }
 
 /* お知らせバナー（通常メッセージ／病院連絡アラート） */

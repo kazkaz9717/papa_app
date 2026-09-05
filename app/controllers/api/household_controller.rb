@@ -39,16 +39,22 @@ module Api
       render json: household_json(current_household)
     end
 
-    def custom_log_labels
-      render json: { custom_log_labels: current_household.custom_log_labels }
+        def custom_log_labels
+      render json: { custom_log_labels: current_household.custom_log_labels.reject(&:blank?) }
     end
 
+    # label指定なら末尾に追加、remove_index指定ならその位置を削除する
+    # （固定4枠をやめて、いくつでも追加できるようにした）
     def update_custom_log_labels
-      index = params[:index].to_i
-      return render json: { error: "不正な位置です" }, status: :unprocessable_entity unless (0..3).cover?(index)
+      labels = current_household.custom_log_labels.reject(&:blank?)
 
-      labels = current_household.custom_log_labels.dup
-      labels[index] = params[:label].to_s.strip
+      if params[:remove_index].present?
+        index = params[:remove_index].to_i
+        labels.delete_at(index) if index.between?(0, labels.length - 1)
+      elsif params[:label].present?
+        labels << params[:label].to_s.strip
+      end
+
       current_household.update!(custom_log_labels: labels)
       render json: { custom_log_labels: current_household.custom_log_labels }
     end
