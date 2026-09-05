@@ -827,19 +827,19 @@ body {
     margin-left: auto;
 }
 
-/* クイックアクション（ミルク・母乳・おむつ・睡眠のタイル） */
+/* タイルを1行にまとめて横スクロールさせる（グループ分け廃止に伴う変更） */
 .qc {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
+    display: flex;
     gap: 8px;
-}
-
-.qc.qc-5 {
-    grid-template-columns: repeat(5, 1fr);
-    gap: 5px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scroll-snap-type: x proximity;
+    padding-bottom: 2px;
 }
 
 .qc .c {
+    flex: 0 0 62px;
+    scroll-snap-align: start;
     background: var(--card);
     border: 1px solid var(--line);
     border-radius: 10px;
@@ -876,26 +876,15 @@ body {
     flex: 0 0 auto;
     background: var(--card);
     border-top: 1px solid var(--line);
-    padding: 6px 14px;
+    padding: 8px 14px;
     box-shadow: 0 -4px 10px rgba(0, 0, 0, .05);
 }
 
-.qc-panel-toggle {
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 8px 2px;
-    cursor: pointer;
-}
-
-.qc-panel-toggle .lbl {
+/* 常時表示になったので、開閉ボタンではなくただのラベルにした */
+.qc-panel-label {
     font-size: 13px;
     font-weight: 600;
-}
-
-.qc-panel-toggle .arrow {
-    font-size: 12px;
-    color: var(--muted);
+    margin: 0 0 8px;
 }
 
 /* 育児記録タブの回数パネルだけ、カテゴリごとに色分けする */

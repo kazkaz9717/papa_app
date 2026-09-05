@@ -86,7 +86,6 @@ function enterApp() {
     loadBenefits();
     loadLog();
     loadCustomLogLabels();
-    initLogPanel();
 }
 function signOut() { Token.set(null); location.reload(); }
 
@@ -405,13 +404,25 @@ async function resetContractions() {
 const LOG_ICON = {
     milk: "🍼", breast: "🤱", solid: "🍚", meal: "🍽", drink: "🥤",
     pee: "💧", poop: "💩", both: "💧💩", sleep_start: "💤", wake: "⏰",
-    custom: "📌"
+    custom: "📌", pump: "🫙", bottle: "🍼", snack: "🍪", temperature: "🌡️",
+    medicine: "💊", runny_nose: "🤧", fever: "🤒", vomit: "🤮",
+    breast_left: "🤱", breast_right: "🤱"
 };
 const LOG_LABEL = {
     milk: "ミルク", breast: "母乳", solid: "離乳食", meal: "ごはん", drink: "飲み物",
-    pee: "おしっこ", poop: "うんち", both: "両方", sleep_start: "寝る", wake: "起きる"
+    pee: "おしっこ", poop: "うんち", both: "両方", sleep_start: "寝た", wake: "起きた",
+    pump: "搾乳", bottle: "哺乳瓶", snack: "おやつ", temperature: "体温",
+    medicine: "くすり", runny_nose: "鼻水", fever: "発熱", vomit: "吐く",
+    breast_left: "授乳(左)", breast_right: "授乳(右)"
 };
-const AMOUNT_KINDS = ["milk", "breast"];
+// ml/gを入力する記録の種類と、単位・プリセットの基準値
+// ※bottle(哺乳瓶)・breastfeeding(授乳)・pump(搾乳器)は専用モーダルを別途作るため、ここには含めない
+const AMOUNT_CONFIG = {
+    milk: { unit: "ml", base: 80 },
+    breast: { unit: "ml", base: 80 },
+    drink: { unit: "ml", base: 80 },
+    solid: { unit: "g", base: 50 }
+};
 
 // 文字列をHTMLとして安全に埋め込めるようにエスケープする
 // （&, <, >, ", ' をすべて対応する実体参照に変換。アプリ全体でこの関数に統一した）
@@ -452,13 +463,15 @@ const MIN_PRESET_BASE = 10;              // プリセット一番左の最小値
 const MAX_PRESET_BASE = MAX_AMOUNT - 20; // プリセット一番右が300を超えないための上限(280)
 
 let amountPresetBase = 70;
+let currentAmountUnit = "ml";   // プリセットボタンに表示する単位(ml/g)
+let currentAmountDefaultBase = 80; // 未入力時にパネルの中心にする基準値
 
 // プリセットボタン（左/中央/右の3つ）を今のamountPresetBaseに従って描画する
 function renderAmountPresets() {
     const current = Number($("#log-detail-amount").value) || null;
     const presets = [amountPresetBase, amountPresetBase + 10, amountPresetBase + 20];
     $("#log-detail-amount-presets").innerHTML = presets.map(v =>
-        `<button type="button" class="preset-btn ${v === current ? "on" : ""}" data-preset="${v}">${v}ml</button>`
+        `<button type="button" class="preset-btn ${v === current ? "on" : ""}" data-preset="${v}">${v}${currentAmountUnit}</button>`
     ).join("");
     $$("#log-detail-amount-presets [data-preset]").forEach(btn => {
         btn.addEventListener("click", () => {
@@ -476,7 +489,7 @@ function renderAmountPresets() {
 // 空欄のときは80mlを基準にする（未入力時のデフォルト表示）
 function centerAmountPresets(rawValue) {
     const hasValue = rawValue !== "" && rawValue != null && !Number.isNaN(Number(rawValue));
-    const base = hasValue ? Number(rawValue) : 80;
+    const base = hasValue ? Number(rawValue) : currentAmountDefaultBase;
     const rounded = Math.round(base / 10) * 10;
     amountPresetBase = Math.min(MAX_PRESET_BASE, Math.max(MIN_PRESET_BASE, rounded - 10));
     renderAmountPresets();
@@ -519,7 +532,22 @@ function renderLog(entries, summary) {
             ? `<span class="who ${roleClass}">${roleChar}</span>`
             : "";
         const label = e.kind === "custom" ? (e.note || "カスタム") : (LOG_LABEL[e.kind] || e.kind);
-        const detail = e.amount ? `${e.amount}ml` : (e.memo || "");
+        let detail;
+        if (e.kind === "bottle") {
+            const parts = [];
+            if (e.breast_ml) parts.push(`母乳${e.breast_ml}ml`);
+            if (e.formula_ml) parts.push(`ミルク${e.formula_ml}ml`);
+            detail = parts.join("/") || e.memo || "";
+        } else if (e.kind === "breast_left" || e.kind === "breast_right") {
+            detail = formatSec(e.duration_sec || 0) + (e.memo ? ` ${e.memo}` : "");
+        } else if (e.kind === "pump") {
+            const parts = [];
+            if (e.duration_sec) parts.push(`${Math.round(e.duration_sec / 60)}分`);
+            if (e.amount) parts.push(`${e.amount}ml`);
+            detail = parts.join("/") || e.memo || "";
+        } else {
+            detail = e.amount ? `${e.amount}ml` : (e.memo || "");
+        }
         const detailHtml = detail ? ` <span style="color:var(--hint); font-size:11px;">(${escapeHtml(detail)})</span>` : "";
         return `<div class="rec" data-id="${e.id}">
             <span class="tm">${tm}</span>
@@ -540,7 +568,16 @@ function renderLog(entries, summary) {
     $$("#log-list .rec").forEach(el => {
         el.addEventListener("click", () => {
             const entry = lastLogEntries.find(e => String(e.id) === el.dataset.id);
-            if (entry) openLogDetail(entry.kind, entry.note, entry);
+            if (!entry) return;
+            if (entry.kind === "bottle") {
+                openBottleDetail(entry);
+            } else if (entry.kind === "breast_left" || entry.kind === "breast_right") {
+                openBreastfeedingDetail(entry);
+            } else if (entry.kind === "pump") {
+                openPumpDetail(entry);
+            } else {
+                openLogDetail(entry.kind, entry.note, entry);
+            }
         });
     });
 }
@@ -551,25 +588,251 @@ async function deleteLogEntry(id) {
     loadLog();
 }
 
+// mm:ss形式に整形する
+function formatSec(totalSec) {
+    const m = Math.floor(totalSec / 60);
+    const s = totalSec % 60;
+    return two(m) + ":" + two(s);
+}
+
+let breastfeedContext = null; // { mode, editKind, editId, date }
+let breastTimers = {
+    left: { running: false, startedAt: null, accumulatedSec: 0 },
+    right: { running: false, startedAt: null, accumulatedSec: 0 }
+};
+let breastTimerTickInterval = null;
+
+// 今の経過秒数（動いていればリアルタイム分も加算して返す）
+function currentBreastSeconds(side) {
+    const t = breastTimers[side];
+    return t.accumulatedSec + (t.running ? Math.floor((Date.now() - t.startedAt) / 1000) : 0);
+}
+
+// 左右のボタン表示と合計時間を今の状態に合わせて更新する
+function renderBreastTimers() {
+    const leftSec = currentBreastSeconds("left");
+    const rightSec = currentBreastSeconds("right");
+    $("#breastfeeding-left-btn").textContent = (breastTimers.left.running ? "■ " : "▶ ") + "左 " + formatSec(leftSec);
+    $("#breastfeeding-right-btn").textContent = (breastTimers.right.running ? "■ " : "▶ ") + "右 " + formatSec(rightSec);
+    $("#breastfeeding-left-btn").classList.toggle("on", breastTimers.left.running);
+    $("#breastfeeding-right-btn").classList.toggle("on", breastTimers.right.running);
+    $("#breastfeeding-total").textContent = formatSec(leftSec + rightSec);
+}
+
+// 左右どちらかのタイマーを開始/停止する
+function toggleBreastTimer(side) {
+    const t = breastTimers[side];
+    if (t.running) {
+        t.accumulatedSec += Math.floor((Date.now() - t.startedAt) / 1000);
+        t.running = false;
+        t.startedAt = null;
+    } else {
+        t.running = true;
+        t.startedAt = Date.now();
+    }
+    renderBreastTimers();
+}
+
+function startBreastTimerTick() {
+    stopBreastTimerTick();
+    breastTimerTickInterval = setInterval(renderBreastTimers, 1000);
+}
+function stopBreastTimerTick() {
+    if (breastTimerTickInterval) clearInterval(breastTimerTickInterval);
+    breastTimerTickInterval = null;
+}
+
+// existingがあれば編集（片側のみ）、なければ新規（左右両方使える）
+function openBreastfeedingDetail(existing) {
+    const dateForEntry = existing ? toDateStr(existing.occurred_at) : todayStr();
+    breastfeedContext = {
+        mode: existing ? "edit" : "create",
+        editKind: existing?.kind,
+        editId: existing?.id,
+        date: dateForEntry
+    };
+    breastTimers = {
+        left: { running: false, startedAt: null, accumulatedSec: existing?.kind === "breast_left" ? (existing.duration_sec || 0) : 0 },
+        right: { running: false, startedAt: null, accumulatedSec: existing?.kind === "breast_right" ? (existing.duration_sec || 0) : 0 }
+    };
+    $("#breastfeeding-title").textContent = existing ? "授乳を編集" : "授乳を記録";
+    $("#breastfeeding-time").value = existing ? toTimeStr(existing.occurred_at) : toTimeStr();
+    $("#breastfeeding-memo").value = existing?.memo ?? "";
+    renderBreastTimers();
+    $("#breastfeeding-modal").hidden = false;
+    startBreastTimerTick();
+}
+
+function closeBreastfeedingDetail() {
+    stopBreastTimerTick();
+    $("#breastfeeding-modal").hidden = true;
+    breastfeedContext = null;
+}
+
+async function saveBreastfeedingDetail() {
+    if (!breastfeedContext) return;
+    // 動いているタイマーがあれば、保存前に一旦止めて時間を確定させる
+    ["left", "right"].forEach(side => {
+        if (breastTimers[side].running) toggleBreastTimer(side);
+    });
+
+    const { mode, editKind, editId, date } = breastfeedContext;
+    const time = $("#breastfeeding-time").value || toTimeStr();
+    const memo = $("#breastfeeding-memo").value || "";
+    const occurredAt = date + "T" + time;
+
+    if (mode === "edit") {
+        const side = editKind === "breast_left" ? "left" : "right";
+        await api("PATCH", "/log_entries/" + editId, {
+            occurred_at: occurredAt,
+            duration_sec: breastTimers[side].accumulatedSec,
+            memo
+        });
+    } else {
+        if (breastTimers.left.accumulatedSec <= 0 && breastTimers.right.accumulatedSec <= 0) {
+            alert("左右どちらかのタイマーを計測してください");
+            return;
+        }
+        if (breastTimers.left.accumulatedSec > 0) {
+            await api("POST", "/log_entries", { kind: "breast_left", occurred_at: occurredAt, duration_sec: breastTimers.left.accumulatedSec, memo });
+        }
+        if (breastTimers.right.accumulatedSec > 0) {
+            await api("POST", "/log_entries", { kind: "breast_right", occurred_at: occurredAt, duration_sec: breastTimers.right.accumulatedSec, memo });
+        }
+    }
+    closeBreastfeedingDetail();
+    if (mode === "create" && date !== currentLogDate) {
+        loadLog(date);
+    } else {
+        loadLog();
+    }
+}
+
+let pumpContext = null; // { mode: "create"|"edit", id, date }
+
+function openPumpDetail(existing) {
+    const dateForEntry = existing ? toDateStr(existing.occurred_at) : todayStr();
+    pumpContext = { mode: existing ? "edit" : "create", id: existing?.id, date: dateForEntry };
+    $("#pump-title").textContent = existing ? "搾乳器を編集" : "搾乳器を記録";
+    $("#pump-time").value = existing ? toTimeStr(existing.occurred_at) : toTimeStr();
+    $("#pump-duration").value = existing?.duration_sec ? Math.round(existing.duration_sec / 60) : "";
+    $("#pump-amount").value = existing?.amount ?? "";
+    $("#pump-memo").value = existing?.memo ?? "";
+    $("#pump-modal").hidden = false;
+}
+
+function closePumpDetail() {
+    $("#pump-modal").hidden = true;
+    pumpContext = null;
+}
+
+// 時間(分)欄・量(ml)欄、両方に使う共通の±ボタン処理
+function adjustPumpValue(inputSelector, delta, max) {
+    const input = $(inputSelector);
+    const current = parseInt(input.value, 10) || 0;
+    input.value = Math.min(max, Math.max(0, current + delta));
+}
+
+async function savePumpDetail() {
+    if (!pumpContext) return;
+    const { mode, id, date } = pumpContext;
+    const time = $("#pump-time").value || toTimeStr();
+    const minutes = parseInt($("#pump-duration").value, 10) || 0;
+    const body = {
+        occurred_at: date + "T" + time,
+        duration_sec: minutes > 0 ? minutes * 60 : "",
+        amount: $("#pump-amount").value || "",
+        memo: $("#pump-memo").value || ""
+    };
+    if (mode === "create") {
+        body.kind = "pump";
+        await api("POST", "/log_entries", body);
+    } else {
+        await api("PATCH", "/log_entries/" + id, body);
+    }
+    closePumpDetail();
+    if (mode === "create" && date !== currentLogDate) {
+        loadLog(date);
+    } else {
+        loadLog();
+    }
+}
+
+let bottleContext = null; // { mode: "create"|"edit", id, date }
+
+// 哺乳瓶モーダルを開く（existingがあれば編集、なければ新規）
+function openBottleDetail(existing) {
+    const dateForEntry = existing ? toDateStr(existing.occurred_at) : todayStr();
+    bottleContext = { mode: existing ? "edit" : "create", id: existing?.id, date: dateForEntry };
+    $("#bottle-title").textContent = existing ? "哺乳瓶を編集" : "哺乳瓶を記録";
+    $("#bottle-time").value = existing ? toTimeStr(existing.occurred_at) : toTimeStr();
+    $("#bottle-breast-ml").value = existing?.breast_ml ?? "";
+    $("#bottle-formula-ml").value = existing?.formula_ml ?? "";
+    $("#bottle-memo").value = existing?.memo ?? "";
+    $("#bottle-modal").hidden = false;
+}
+
+function closeBottleDetail() {
+    $("#bottle-modal").hidden = true;
+    bottleContext = null;
+}
+
+// 母乳/ミルクどちらのml欄にも使う共通の±10ボタン処理
+function adjustBottleAmount(inputSelector, delta) {
+    const input = $(inputSelector);
+    const current = parseInt(input.value, 10) || 0;
+    input.value = Math.min(1000, Math.max(0, current + delta));
+}
+
+async function saveBottleDetail() {
+    if (!bottleContext) return;
+    const { mode, id, date } = bottleContext;
+    const time = $("#bottle-time").value || toTimeStr();
+    const body = {
+        occurred_at: date + "T" + time,
+        breast_ml: $("#bottle-breast-ml").value || "",
+        formula_ml: $("#bottle-formula-ml").value || "",
+        memo: $("#bottle-memo").value || ""
+    };
+    if (mode === "create") {
+        body.kind = "bottle";
+        await api("POST", "/log_entries", body);
+    } else {
+        await api("PATCH", "/log_entries/" + id, body);
+    }
+    closeBottleDetail();
+    if (mode === "create" && date !== currentLogDate) {
+        loadLog(date);
+    } else {
+        loadLog();
+    }
+}
+
 function openLogDetail(kind, note, existing) {
-    // 新規記録は常に「今日」の日付にする（編集時だけ元の日付を保つ）
-    // ※ 過去日を表示中でも、新しく記録するものは必ず今日扱いにする
     const dateForEntry = existing ? toDateStr(existing.occurred_at) : todayStr();
     logDetailContext = { mode: existing ? "edit" : "create", kind, id: existing?.id, note, date: dateForEntry };
-    const isAmount = AMOUNT_KINDS.includes(kind);
+    const amountConfig = AMOUNT_CONFIG[kind];
+    const isAmount = !!amountConfig;
+    const isTemperature = kind === "temperature";
     const label = kind === "custom" ? (note || "カスタム") : (LOG_LABEL[kind] || kind);
     $("#log-detail-title").textContent = label + (existing ? "を編集" : "を記録");
     $("#log-detail-time").value = existing ? toTimeStr(existing.occurred_at) : toTimeStr();
+
     $("#log-detail-amount-wrap").hidden = !isAmount;
-    $("#log-detail-memo-wrap").hidden = isAmount;
+    $("#log-detail-temp-wrap").hidden = !isTemperature;
+    // メモは体温以外なら常に表示する（量とメモを同時に入力できるようにするため）
+    $("#log-detail-memo-wrap").hidden = isTemperature;
+
     $("#log-detail-amount").value = existing?.amount ?? "";
     if (isAmount) {
-        // 既存の値（編集時）または未入力（新規時）を中心にパネルを表示する
+        currentAmountUnit = amountConfig.unit;
+        currentAmountDefaultBase = amountConfig.base;
         centerAmountPresets($("#log-detail-amount").value);
     }
+
+    $("#log-detail-temperature").value = existing?.temperature ?? "";
     $("#log-detail-memo").value = existing?.memo ?? "";
     $("#log-detail-modal").hidden = false;
-    if (existing) closeLogPanel();
 }
 
 function closeLogDetail() {
@@ -580,12 +843,14 @@ function closeLogDetail() {
 async function saveLogDetail() {
     if (!logDetailContext) return;
     const { mode, kind, id, note, date } = logDetailContext;
-    const isAmount = AMOUNT_KINDS.includes(kind);
+    const amountConfig = AMOUNT_CONFIG[kind];
+    const isTemperature = kind === "temperature";
     const time = $("#log-detail-time").value || toTimeStr();
     const body = {
         occurred_at: date + "T" + time,
-        amount: isAmount ? ($("#log-detail-amount").value || "") : "",
-        memo: isAmount ? "" : ($("#log-detail-memo").value || "")
+        amount: amountConfig ? ($("#log-detail-amount").value || "") : "",
+        temperature: isTemperature ? ($("#log-detail-temperature").value || "") : "",
+        memo: isTemperature ? "" : ($("#log-detail-memo").value || "")
     };
     if (mode === "create") {
         body.kind = kind;
@@ -595,7 +860,6 @@ async function saveLogDetail() {
         await api("PATCH", "/log_entries/" + id, body);
     }
     closeLogDetail();
-    closeLogPanel();
     // 新規記録は必ず「今日」で保存されるため、今見ている日付が今日でなければ
     // 今日のログ画面に自動で切り替えて、記録した内容が見えるようにする
     if (mode === "create" && date !== currentLogDate) {
@@ -681,35 +945,6 @@ function openCustomEditModal() {
 function closeCustomEditModal() {
     $("#custom-edit-modal").hidden = true;
 }
-
-// 「記録する」パネルの開閉状態をまとめて管理する共通処理
-// open: true なら開く、false なら閉じる
-// ※ 以前は toggleLogPanel / closeLogPanel / initLogPanel の3つが
-//   それぞれ似た内容（表示切替・矢印の文字・localStorage保存）を
-//   個別に書いていたため、この1関数にまとめた
-function setLogPanelOpen(open) {
-    $("#log-panel-body").hidden = !open;
-    $("#log-panel-arrow").textContent = open ? "▴ 閉じる" : "▾ 開く";
-    localStorage.setItem("papa_log_panel_open", open ? "1" : "0");
-}
-
-// タップで開閉を反転させる
-function toggleLogPanel() {
-    const isHidden = $("#log-panel-body").hidden;
-    setLogPanelOpen(isHidden);
-}
-
-// 保存時・編集画面を開いたときなど、強制的に閉じたいときに使う
-function closeLogPanel() {
-    setLogPanelOpen(false);
-}
-
-// 画面を開いた最初のタイミングで、前回保存した開閉状態を復元する
-function initLogPanel() {
-    const wasOpen = localStorage.getItem("papa_log_panel_open") === "1";
-    setLogPanelOpen(wasOpen);
-}
-
 
 
 // ===== お金（育休・給付金）=====
@@ -909,9 +1144,35 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#day-add").addEventListener("click", () => addChecklistItem("day", "#day-new", "#day-add"));
     $("#doc-add").addEventListener("click", () => addChecklistItem("procedure", "#doc-new", "#doc-add"));
     $("#gift-add").addEventListener("click", addGift);
-    $$("#v-log .qc .c[data-kind]").forEach(el => el.addEventListener("click", () => openLogDetail(el.dataset.kind)));
+    // breastfeeding(授乳)・bottle(哺乳瓶)・pump(搾乳器)は専用モーダルを別のフェーズで実装するため、
+    // ここでは通常の記録モーダル(openLogDetail)を使う項目だけにクリックを登録する
+    const SPECIAL_TILE_KINDS = ["breastfeeding", "bottle", "pump"];
+    $$("#log-tiles .c[data-kind]").forEach(el => {
+        const kind = el.dataset.kind;
+        if (SPECIAL_TILE_KINDS.includes(kind)) return;
+        el.addEventListener("click", () => openLogDetail(kind));
+    });
     $("#log-detail-save").addEventListener("click", saveLogDetail)
     $("#log-detail-cancel").addEventListener("click", closeLogDetail);
+    $("#bottle-save").addEventListener("click", saveBottleDetail);
+    $("#bottle-cancel").addEventListener("click", closeBottleDetail);
+    $("#bottle-breast-minus").addEventListener("click", () => adjustBottleAmount("#bottle-breast-ml", -10));
+    $("#bottle-breast-plus").addEventListener("click", () => adjustBottleAmount("#bottle-breast-ml", 10));
+    $("#bottle-formula-minus").addEventListener("click", () => adjustBottleAmount("#bottle-formula-ml", -10));
+    $("#bottle-formula-plus").addEventListener("click", () => adjustBottleAmount("#bottle-formula-ml", 10));
+    $$("#log-tiles .c[data-kind='bottle']").forEach(el => el.addEventListener("click", () => openBottleDetail()));
+    $$("#log-tiles .c[data-kind='breastfeeding']").forEach(el => el.addEventListener("click", () => openBreastfeedingDetail()));
+    $("#breastfeeding-left-btn").addEventListener("click", () => toggleBreastTimer("left"));
+    $("#breastfeeding-right-btn").addEventListener("click", () => toggleBreastTimer("right"));
+    $("#breastfeeding-save").addEventListener("click", saveBreastfeedingDetail);
+    $("#breastfeeding-cancel").addEventListener("click", closeBreastfeedingDetail);
+    $$("#log-tiles .c[data-kind='pump']").forEach(el => el.addEventListener("click", () => openPumpDetail()));
+    $("#pump-save").addEventListener("click", savePumpDetail);
+    $("#pump-cancel").addEventListener("click", closePumpDetail);
+    $("#pump-duration-minus").addEventListener("click", () => adjustPumpValue("#pump-duration", -1, 180));
+    $("#pump-duration-plus").addEventListener("click", () => adjustPumpValue("#pump-duration", 1, 180));
+    $("#pump-amount-minus").addEventListener("click", () => adjustPumpValue("#pump-amount", -10, 1000));
+    $("#pump-amount-plus").addEventListener("click", () => adjustPumpValue("#pump-amount", 10, 1000));
     // ±10ボタン（前回は±5だったが10刻みに変更）
     $("#log-detail-amount-minus").addEventListener("click", () => adjustAmount(-10));
     $("#log-detail-amount-plus").addEventListener("click", () => adjustAmount(10));
@@ -934,7 +1195,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         centerAmountPresets(el.value);
     });
     $("#custom-edit-close").addEventListener("click", closeCustomEditModal);
-    $("#log-panel-toggle").addEventListener("click", toggleLogPanel);
     $("#log-date").addEventListener("change", () => loadLog($("#log-date").value));
     $("#log-today-btn").addEventListener("click", () => loadLog(todayStr()));
     $("#log-prev").addEventListener("click", () => loadLog(shiftDate(currentLogDate, -1)));

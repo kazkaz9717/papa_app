@@ -18,6 +18,10 @@ module Api
         note: params[:note],
         amount: params[:amount].presence,
         memo: params[:memo].presence,
+        duration_sec: params[:duration_sec].presence,
+        breast_ml: params[:breast_ml].presence,
+        formula_ml: params[:formula_ml].presence,
+        temperature: params[:temperature].presence,
         occurred_at: params[:occurred_at].presence || Time.current,
         recorded_by: current_user
       )
@@ -34,7 +38,11 @@ module Api
       entry.update!(
         occurred_at: params[:occurred_at].presence || entry.occurred_at,
         amount: params[:amount].presence,
-        memo: params[:memo].presence
+        memo: params[:memo].presence,
+        duration_sec: params[:duration_sec].presence,
+        breast_ml: params[:breast_ml].presence,
+        formula_ml: params[:formula_ml].presence,
+        temperature: params[:temperature].presence
       )
       render json: {
         entry: entry_json(entry),
@@ -51,12 +59,31 @@ module Api
 
     private
 
+    # 授乳(左右合計)・哺乳瓶(母乳/ミルクml)・排泄(おしっこ/うんち)の3分割で集計する
     def summary_for(scope)
+      left = scope.where(kind: "breast_left")
+      right = scope.where(kind: "breast_right")
+      bottle = scope.where(kind: "bottle")
+
       {
-        milk: scope.where(kind: %w[milk breast]).count,
-        meal: scope.where(kind: %w[solid meal drink]).count,
-        toilet: scope.where(kind: %w[pee poop both]).count,
-        sleep: scope.where(kind: %w[sleep_start]).count
+        breastfeeding: {
+          left: { count: left.count, seconds: left.sum(:duration_sec) },
+          right: { count: right.count, seconds: right.sum(:duration_sec) },
+          total: {
+            count: left.count + right.count,
+            seconds: left.sum(:duration_sec) + right.sum(:duration_sec)
+          }
+        },
+        bottle: {
+          count: bottle.count,
+          breast_ml: bottle.sum(:breast_ml),
+          formula_ml: bottle.sum(:formula_ml)
+        },
+        toilet: {
+          # 「両方」はおしっこ・うんちの両方の回数にカウントする
+          pee: scope.where(kind: %w[pee both]).count,
+          poop: scope.where(kind: %w[poop both]).count
+        }
       }
     end
 
@@ -67,6 +94,10 @@ module Api
         note: entry.note,
         amount: entry.amount,
         memo: entry.memo,
+        duration_sec: entry.duration_sec,
+        breast_ml: entry.breast_ml,
+        formula_ml: entry.formula_ml,
+        temperature: entry.temperature,
         occurred_at: entry.occurred_at,
         recorded_by: entry.recorded_by&.name,
         recorded_by_role: entry.recorded_by&.role

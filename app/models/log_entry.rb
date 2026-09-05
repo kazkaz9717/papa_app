@@ -1,6 +1,10 @@
 class LogEntry < ApplicationRecord
-  KINDS = %w[milk breast solid meal drink pee poop both sleep_start wake custom].freeze
-  AMOUNT_KINDS = %w[milk breast].freeze
+  # milk/breastは過去データ表示のため残すが、新規記録では使わない
+  KINDS = %w[
+    milk breast solid meal drink pee poop both sleep_start wake custom
+    breast_left breast_right pump bottle snack temperature medicine
+    runny_nose fever vomit
+  ].freeze
 
   belongs_to :household
   belongs_to :recorded_by, class_name: "User", optional: true

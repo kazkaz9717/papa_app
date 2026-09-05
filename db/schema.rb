@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.2].define(version: 2026_08_29_000520) do
+ActiveRecord::Schema[7.2].define(version: 2026_09_05_020532) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -85,6 +85,10 @@ ActiveRecord::Schema[7.2].define(version: 2026_08_29_000520) do
     t.text "note"
     t.integer "amount"
     t.text "memo"
+    t.integer "duration_sec"
+    t.integer "breast_ml"
+    t.integer "formula_ml"
+    t.decimal "temperature", precision: 4, scale: 1
     t.index ["household_id"], name: "index_log_entries_on_household_id"
     t.index ["recorded_by_id"], name: "index_log_entries_on_recorded_by_id"
   end

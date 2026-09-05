@@ -195,61 +195,77 @@
                     </div>
 
                     <div class="qc-panel">
-                        <div class="qc-panel-toggle" id="log-panel-toggle">
-                            <span class="lbl">記録する</span>
-                            <span class="arrow" id="log-panel-arrow">▾ 開く</span>
-                        </div>
-                        <div id="log-panel-body" hidden>
-                            <p class="sec" style="margin-top:8px;">授乳・食事</p>
-                            <div class="qc qc-5">
-                                <div class="c" data-kind="breast">
-                                    <div class="ic">🤱</div>
-                                    <p class="k">母乳</p>
-                                </div>
-                                <div class="c" data-kind="milk">
-                                    <div class="ic">🍼</div>
-                                    <p class="k">ミルク</p>
-                                </div>
-                                <div class="c" data-kind="drink">
-                                    <div class="ic">🥤</div>
-                                    <p class="k">飲み物</p>
-                                </div>
-                                <div class="c" data-kind="solid">
-                                    <div class="ic">🍚</div>
-                                    <p class="k">離乳食</p>
-                                </div>
-                                <div class="c" data-kind="meal">
-                                    <div class="ic">🍽</div>
-                                    <p class="k">ごはん</p>
-                                </div>
+                        <p class="qc-panel-label">記録する</p>
+                        <div class="qc" id="log-tiles">
+                            <div class="c" data-kind="breastfeeding">
+                                <div class="ic">🤱</div>
+                                <p class="k">授乳</p>
                             </div>
-
-                            <p class="sec" style="margin-top:8px;">排泄・睡眠</p>
-                            <div class="qc qc-5">
-                                <div class="c" data-kind="pee">
-                                    <div class="ic">💧</div>
-                                    <p class="k">おしっこ</p>
-                                </div>
-                                <div class="c" data-kind="poop">
-                                    <div class="ic">💩</div>
-                                    <p class="k">うんち</p>
-                                </div>
-                                <div class="c" data-kind="both">
-                                    <div class="ic">💧💩</div>
-                                    <p class="k">両方</p>
-                                </div>
-                                <div class="c" data-kind="sleep_start">
-                                    <div class="ic">💤</div>
-                                    <p class="k">寝る</p>
-                                </div>
-                                <div class="c" data-kind="wake">
-                                    <div class="ic">⏰</div>
-                                    <p class="k">起きる</p>
-                                </div>
+                            <div class="c" data-kind="pump">
+                                <div class="ic">🫙</div>
+                                <p class="k">搾乳器</p>
                             </div>
-
-                            <p class="sec" style="margin-top:8px;">カスタム</p>
-                            <div class="qc qc-5" id="log-custom-tiles"></div>
+                            <div class="c" data-kind="bottle">
+                                <div class="ic">🍼</div>
+                                <p class="k">哺乳瓶</p>
+                            </div>
+                            <div class="c" data-kind="pee">
+                                <div class="ic">💧</div>
+                                <p class="k">おしっこ</p>
+                            </div>
+                            <div class="c" data-kind="poop">
+                                <div class="ic">💩</div>
+                                <p class="k">うんち</p>
+                            </div>
+                            <div class="c" data-kind="both">
+                                <div class="ic">💧💩</div>
+                                <p class="k">両方</p>
+                            </div>
+                            <div class="c" data-kind="sleep_start">
+                                <div class="ic">💤</div>
+                                <p class="k">寝た</p>
+                            </div>
+                            <div class="c" data-kind="wake">
+                                <div class="ic">⏰</div>
+                                <p class="k">起きた</p>
+                            </div>
+                            <div class="c" data-kind="drink">
+                                <div class="ic">🥤</div>
+                                <p class="k">飲み物</p>
+                            </div>
+                            <div class="c" data-kind="solid">
+                                <div class="ic">🍚</div>
+                                <p class="k">離乳食</p>
+                            </div>
+                            <div class="c" data-kind="meal">
+                                <div class="ic">🍽</div>
+                                <p class="k">ごはん</p>
+                            </div>
+                            <div class="c" data-kind="snack">
+                                <div class="ic">🍪</div>
+                                <p class="k">おやつ</p>
+                            </div>
+                            <div class="c" data-kind="temperature">
+                                <div class="ic">🌡️</div>
+                                <p class="k">体温計</p>
+                            </div>
+                            <div class="c" data-kind="medicine">
+                                <div class="ic">💊</div>
+                                <p class="k">くすり</p>
+                            </div>
+                            <div class="c" data-kind="runny_nose">
+                                <div class="ic">🤧</div>
+                                <p class="k">鼻水</p>
+                            </div>
+                            <div class="c" data-kind="fever">
+                                <div class="ic">🤒</div>
+                                <p class="k">発熱</p>
+                            </div>
+                            <div class="c" data-kind="vomit">
+                                <div class="ic">🤮</div>
+                                <p class="k">吐く</p>
+                            </div>
+                            <span id="log-custom-tiles" style="display:contents;"></span>
                         </div>
                     </div>
                 </section>
@@ -347,6 +363,12 @@
                         </div>
                     </div>
 
+                    <div id="log-detail-temp-wrap" style="margin-bottom:10px;" hidden>
+                        <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">体温</label>
+                        <input type="text" inputmode="decimal" id="log-detail-temperature" placeholder="36.5"
+                            style="width:100%; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px;">
+                    </div>
+
                     <div id="log-detail-memo-wrap" style="margin-bottom:10px;" hidden>
                         <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">メモ</label>
                         <input type="text" id="log-detail-memo" placeholder="メモ（任意）"
@@ -357,6 +379,135 @@
                         <button class="btn" id="log-detail-save"
                             style="flex:1; background:var(--accent); color:#fff;">保存</button>
                         <button class="gift-choose" id="log-detail-cancel">キャンセル</button>
+                    </div>
+                </div>
+            </div>
+            <div id="bottle-modal" class="modal-overlay" hidden>
+                <div class="modal-panel">
+                    <p class="modal-title" id="bottle-title">哺乳瓶を記録</p>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">時刻</label>
+                        <input type="time" id="bottle-time"
+                            style="width:100%; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; -webkit-appearance:none; appearance:none; background:#fff;">
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label
+                            style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">母乳(ml)</label>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <button type="button" id="bottle-breast-minus" class="date-nav">－</button>
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="bottle-breast-ml"
+                                placeholder="0"
+                                style="flex:1; min-width:0; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; text-align:center;">
+                            <button type="button" id="bottle-breast-plus" class="date-nav">＋</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label
+                            style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">ミルク(ml)</label>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <button type="button" id="bottle-formula-minus" class="date-nav">－</button>
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="bottle-formula-ml"
+                                placeholder="0"
+                                style="flex:1; min-width:0; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; text-align:center;">
+                            <button type="button" id="bottle-formula-plus" class="date-nav">＋</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">メモ</label>
+                        <input type="text" id="bottle-memo" placeholder="メモ（任意）"
+                            style="width:100%; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px;">
+                    </div>
+
+                    <div style="display:flex; gap:8px; margin-top:12px;">
+                        <button class="btn" id="bottle-save"
+                            style="flex:1; background:var(--accent); color:#fff;">保存</button>
+                        <button class="gift-choose" id="bottle-cancel">キャンセル</button>
+                    </div>
+                </div>
+            </div>
+            <div id="breastfeeding-modal" class="modal-overlay" hidden>
+                <div class="modal-panel">
+                    <p class="modal-title" id="breastfeeding-title">授乳を記録</p>
+
+                    <div style="text-align:center; margin-bottom:12px;">
+                        <p style="font-size:12px; color:var(--muted); margin:0 0 2px;">合計</p>
+                        <p id="breastfeeding-total"
+                            style="font-size:28px; font-weight:600; margin:0; font-variant-numeric:tabular-nums;">
+                            00:00</p>
+                    </div>
+
+                    <div style="display:flex; gap:8px; margin-bottom:12px;">
+                        <button type="button" id="breastfeeding-left-btn" class="preset-btn"
+                            style="flex:1; height:52px; font-size:14px;">▶ 左 00:00</button>
+                        <button type="button" id="breastfeeding-right-btn" class="preset-btn"
+                            style="flex:1; height:52px; font-size:14px;">▶ 右 00:00</button>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">時刻</label>
+                        <input type="time" id="breastfeeding-time"
+                            style="width:100%; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; -webkit-appearance:none; appearance:none; background:#fff;">
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">メモ</label>
+                        <input type="text" id="breastfeeding-memo" placeholder="メモ（任意）"
+                            style="width:100%; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px;">
+                    </div>
+
+                    <div style="display:flex; gap:8px; margin-top:12px;">
+                        <button class="btn" id="breastfeeding-save"
+                            style="flex:1; background:var(--accent); color:#fff;">保存</button>
+                        <button class="gift-choose" id="breastfeeding-cancel">キャンセル</button>
+                    </div>
+                </div>
+            </div>
+            <div id="pump-modal" class="modal-overlay" hidden>
+                <div class="modal-panel">
+                    <p class="modal-title" id="pump-title">搾乳器を記録</p>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">時刻</label>
+                        <input type="time" id="pump-time"
+                            style="width:100%; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; -webkit-appearance:none; appearance:none; background:#fff;">
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label
+                            style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">時間(分)</label>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <button type="button" id="pump-duration-minus" class="date-nav">－</button>
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="pump-duration" placeholder="0"
+                                style="flex:1; min-width:0; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; text-align:center;">
+                            <button type="button" id="pump-duration-plus" class="date-nav">＋</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label
+                            style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">量(ml)</label>
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <button type="button" id="pump-amount-minus" class="date-nav">－</button>
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="pump-amount" placeholder="0"
+                                style="flex:1; min-width:0; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; text-align:center;">
+                            <button type="button" id="pump-amount-plus" class="date-nav">＋</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom:10px;">
+                        <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">メモ</label>
+                        <input type="text" id="pump-memo" placeholder="メモ（任意）"
+                            style="width:100%; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px;">
+                    </div>
+
+                    <div style="display:flex; gap:8px; margin-top:12px;">
+                        <button class="btn" id="pump-save"
+                            style="flex:1; background:var(--accent); color:#fff;">保存</button>
+                        <button class="gift-choose" id="pump-cancel">キャンセル</button>
                     </div>
                 </div>
             </div>
