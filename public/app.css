@@ -925,6 +925,26 @@ body {
     margin: 0 0 8px;
 }
 
+/* 記録タブの.bodyだけflex化して、余白エリアが残りスペースを埋められるようにする */
+#v-log .body {
+    display: flex;
+    flex-direction: column;
+}
+
+/* stats・見出し・ログ一覧は縮めず、余白エリアだけが伸び縮みするようにする */
+#v-log .body>.stats,
+#v-log .body>#log-heading,
+#v-log .body>.list {
+    flex-shrink: 0;
+}
+
+
+/* ログ一覧の下に、タイル選択ポップアップを開くための余白エリアを作る */
+.log-empty-space {
+    flex: 1;
+    min-height: 120px;
+}
+
 /* 育児記録タブの回数パネルだけ、カテゴリごとに色分けする */
 #v-log .stat.milk {
     background: var(--pink-bg);

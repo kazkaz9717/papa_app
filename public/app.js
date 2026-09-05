@@ -1341,6 +1341,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#log-list").addEventListener("click", (ev) => {
         if (!ev.target.closest(".rec")) openTilePicker();
     });
+    $("#log-empty-space").addEventListener("click", openTilePicker);
     $("#tile-picker-close").addEventListener("click", closeTilePicker);
     $("#log-date").addEventListener("change", () => loadLog($("#log-date").value));
     $("#log-today-btn").addEventListener("click", () => loadLog(todayStr()));
