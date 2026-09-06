@@ -591,7 +591,10 @@ function renderLog(entries, summary) {
             latestByKey.set(key, e);
         }
     });
-    const latestIds = new Set(Array.from(latestByKey.values()).map(e => e.id));
+    // 今日を見ているときだけ相対時間を表示する（別日では出さない）
+    const latestIds = (currentLogDate === todayStr())
+        ? new Set(Array.from(latestByKey.values()).map(e => e.id))
+        : new Set();
 
     $("#log-list").innerHTML = lastLogEntries.map(e => {
         const d = new Date(e.occurred_at);
@@ -611,7 +614,8 @@ function renderLog(entries, summary) {
             const parts = [];
             if (e.breast_ml) parts.push(`母乳${e.breast_ml}ml`);
             if (e.formula_ml) parts.push(`ミルク${e.formula_ml}ml`);
-            detail = parts.join(" / ") || e.memo || "";
+            if (e.memo) parts.push(e.memo);
+            detail = parts.join(" / ");
         } else if (e.kind === "breastfeeding") {
             const parts = [];
             if (e.left_duration_sec) parts.push(`左${formatSec(e.left_duration_sec)}`);
@@ -621,12 +625,16 @@ function renderLog(entries, summary) {
             const parts = [];
             if (e.duration_sec) parts.push(`${Math.round(e.duration_sec / 60)}分`);
             if (e.amount) parts.push(`${e.amount}ml`);
-            detail = parts.join(" / ") || e.memo || "";
+            if (e.memo) parts.push(e.memo);
+            detail = parts.join(" / ");
         } else if (e.kind === "temperature") {
             detail = e.temperature ? `${e.temperature}℃` : "";
         } else {
             const unit = AMOUNT_CONFIG[e.kind]?.unit || "ml";
-            detail = e.amount ? `${e.amount}${unit}` : (e.memo || "");
+            const parts = [];
+            if (e.amount) parts.push(`${e.amount}${unit}`);
+            if (e.memo) parts.push(e.memo);
+            detail = parts.join(" / ");
         }
         const detailHtml = detail ? ` <span style="color:var(--hint); font-size:11px;">(${escapeHtml(detail)})</span>` : "";
         return `<div class="rec" data-id="${e.id}">

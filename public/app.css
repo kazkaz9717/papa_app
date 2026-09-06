@@ -847,7 +847,7 @@ body {
 .rec .tm {
     font-size: 12px;
     color: var(--hint);
-    width: 40px;
+    width: 64px;
 }
 
 /* 各種類で最新1件の時刻の下にだけ、経過時間を小さく表示する */
