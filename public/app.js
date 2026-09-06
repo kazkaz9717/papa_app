@@ -99,6 +99,7 @@ function renderDueCountdown() {
     if (!dueOn) {
         if (countdownEl) countdownEl.textContent = "";
         if (alertEl) alertEl.hidden = true;
+        renderBabyAge();
         return;
     }
 
@@ -122,6 +123,28 @@ function renderDueCountdown() {
             alertEl.hidden = true;
         }
     }
+    renderBabyAge();
+}
+
+// 赤ちゃんの名前と月齢（出産予定日/出産日を基準に計算）を記録タブのヘッダーに表示する
+function renderBabyAge() {
+    const el = $("#baby-age-badge");
+    if (!el) return;
+    const dueOn = ME?.household?.due_on;
+    const babyName = ME?.household?.baby_name;
+    if (!dueOn) { el.textContent = ""; return; }
+
+    const due = new Date(dueOn); due.setHours(0, 0, 0, 0);
+    const today = new Date(); today.setHours(0, 0, 0, 0);
+    if (due > today) { el.textContent = ""; return; }
+
+    let years = today.getFullYear() - due.getFullYear();
+    let months = today.getMonth() - due.getMonth();
+    if (today.getDate() < due.getDate()) months--;
+    if (months < 0) { years--; months += 12; }
+
+    const namePart = babyName ? `<span style="margin-right:6px;">${escapeHtml(babyName)}</span>` : "";
+    el.innerHTML = `${namePart}${years}歳${months}ヶ月`;
 }
 
 
@@ -574,6 +597,8 @@ function renderLog(entries, summary) {
             if (e.duration_sec) parts.push(`${Math.round(e.duration_sec / 60)}分`);
             if (e.amount) parts.push(`${e.amount}ml`);
             detail = parts.join(" / ") || e.memo || "";
+        } else if (e.kind === "temperature") {
+            detail = e.temperature ? `${e.temperature}℃` : "";
         } else {
             detail = e.amount ? `${e.amount}ml` : (e.memo || "");
         }
@@ -1063,7 +1088,7 @@ function renderCustomEditModal() {
     });
 
     $("#custom-add-btn").addEventListener("click", async () => {
-        const label = prompt("項目名を入力してください（例: 体温測定）");
+        const label = prompt("項目名を入力してください（例: 沐浴）");
         if (!label || !label.trim()) return;
         await addCustomLabel(label.trim());
     });
