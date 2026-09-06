@@ -136,7 +136,14 @@ function renderBabyAge() {
 
     const due = new Date(dueOn); due.setHours(0, 0, 0, 0);
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    if (due > today) { el.textContent = ""; return; }
+    const namePart = babyName ? `<span style="margin-right:6px;">${escapeHtml(babyName)}</span>` : "";
+
+    // 出産予定日より前は、月齢の代わりに予定日までの日数を表示する
+    if (due > today) {
+        const diffDays = Math.round((due - today) / (1000 * 60 * 60 * 24));
+        el.innerHTML = `${namePart}出産予定日まであと${diffDays}日`;
+        return;
+    }
 
     let years = today.getFullYear() - due.getFullYear();
     let months = today.getMonth() - due.getMonth();
@@ -152,7 +159,6 @@ function renderBabyAge() {
         months += 12;
     }
 
-    const namePart = babyName ? `<span style="margin-right:6px;">${escapeHtml(babyName)}</span>` : "";
     el.innerHTML = `${namePart}${years}歳${months}ヶ月${days}日`;
 }
 
