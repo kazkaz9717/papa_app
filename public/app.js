@@ -978,75 +978,22 @@ async function saveTileOrder() {
     }
 }
 
-// 長押し(350ms)でドラッグ開始、指を動かすとタイルの位置が入れ替わる
+// SortableJSで長押しドラッグの並び替えを行う（スマホのスクロールと競合しにくい）
 function initTileReorder() {
     const container = $("#log-tiles");
-    if (!container) return;
+    if (!container || typeof Sortable === "undefined") return;
 
-    let pressTimer = null;
-    let dragEl = null;
-    let longPressTriggered = false;
-    let startX = 0, startY = 0;
-
-    function tileAt(x, y) {
-        return $$("#log-tiles .c[data-kind]").find(el => {
-            if (el === dragEl) return false;
-            const r = el.getBoundingClientRect();
-            return x >= r.left && x <= r.right && y >= r.top && y <= r.bottom;
-        });
-    }
-
-    function endDrag() {
-        clearTimeout(pressTimer);
-        pressTimer = null;
-        if (dragEl) {
-            dragEl.classList.remove("dragging");
-            if (longPressTriggered) {
-                saveTileOrder();
-                suppressNextTileClick = true;
-            }
-        }
-        dragEl = null;
-        longPressTriggered = false;
-    }
-
-    container.addEventListener("pointerdown", (ev) => {
-        const tile = ev.target.closest(".c[data-kind]");
-        if (!tile) return;
-        startX = ev.clientX;
-        startY = ev.clientY;
-        longPressTriggered = false;
-        clearTimeout(pressTimer);
-        pressTimer = setTimeout(() => {
-            longPressTriggered = true;
-            dragEl = tile;
-            dragEl.classList.add("dragging");
-        }, 350);
-    });
-
-    container.addEventListener("pointermove", (ev) => {
-        if (pressTimer && !longPressTriggered) {
-            // 指が動きすぎたら長押し判定をやめる（横スクロール操作として扱う）
-            if (Math.abs(ev.clientX - startX) > 8 || Math.abs(ev.clientY - startY) > 8) {
-                clearTimeout(pressTimer);
-                pressTimer = null;
-            }
-            return;
-        }
-        if (!dragEl) return;
-        ev.preventDefault();
-        const target = tileAt(ev.clientX, ev.clientY);
-        if (target) {
-            const rect = target.getBoundingClientRect();
-            const before = ev.clientX < rect.left + rect.width / 2;
-            container.insertBefore(dragEl, before ? target : target.nextSibling);
+    Sortable.create(container, {
+        animation: 150,
+        delay: 300,
+        delayOnTouchOnly: true,
+        touchStartThreshold: 5,
+        onEnd: (evt) => {
+            if (evt.oldIndex !== evt.newIndex) suppressNextTileClick = true;
+            saveTileOrder();
         }
     });
 
-    container.addEventListener("pointerup", endDrag);
-    container.addEventListener("pointercancel", endDrag);
-
-    // 並び替え直後の1回だけクリックを無効化する（記録モーダルが誤って開かないように）
     container.addEventListener("click", (ev) => {
         if (suppressNextTileClick) {
             ev.stopPropagation();
@@ -1168,74 +1115,24 @@ async function saveCustomLabelOrder() {
     }
 }
 
-// 長押し(350ms)でドラッグ開始、指を動かすと項目の位置が入れ替わる（縦並び版）
+// SortableJSで並び替える（「＋ 追加」行はドラッグ対象から除外する）
 function initCustomReorder() {
     const container = $("#custom-edit-list");
-    if (!container) return;
+    if (!container || typeof Sortable === "undefined") return;
 
-    let pressTimer = null;
-    let dragEl = null;
-    let longPressTriggered = false;
-    let startX = 0, startY = 0;
-
-    function rowAt(y) {
-        return $$("#custom-edit-list .modal-row[data-label]").find(el => {
-            if (el === dragEl) return false;
-            const r = el.getBoundingClientRect();
-            return y >= r.top && y <= r.bottom;
-        });
-    }
-
-    function endDrag() {
-        clearTimeout(pressTimer);
-        pressTimer = null;
-        if (dragEl) {
-            dragEl.classList.remove("dragging");
-            if (longPressTriggered) {
-                saveCustomLabelOrder();
-                suppressNextCustomClick = true;
-            }
-        }
-        dragEl = null;
-        longPressTriggered = false;
-    }
-
-    container.addEventListener("pointerdown", (ev) => {
-        const row = ev.target.closest(".modal-row[data-label]");
-        if (!row) return;
-        startX = ev.clientX;
-        startY = ev.clientY;
-        longPressTriggered = false;
-        clearTimeout(pressTimer);
-        pressTimer = setTimeout(() => {
-            longPressTriggered = true;
-            dragEl = row;
-            dragEl.classList.add("dragging");
-        }, 350);
-    });
-
-    container.addEventListener("pointermove", (ev) => {
-        if (pressTimer && !longPressTriggered) {
-            if (Math.abs(ev.clientX - startX) > 8 || Math.abs(ev.clientY - startY) > 8) {
-                clearTimeout(pressTimer);
-                pressTimer = null;
-            }
-            return;
-        }
-        if (!dragEl) return;
-        ev.preventDefault();
-        const target = rowAt(ev.clientY);
-        if (target) {
-            const rect = target.getBoundingClientRect();
-            const before = ev.clientY < rect.top + rect.height / 2;
-            container.insertBefore(dragEl, before ? target : target.nextSibling);
+    Sortable.create(container, {
+        animation: 150,
+        delay: 300,
+        delayOnTouchOnly: true,
+        touchStartThreshold: 5,
+        filter: ".modal-row:not([data-label])",
+        preventOnFilter: false,
+        onEnd: (evt) => {
+            if (evt.oldIndex !== evt.newIndex) suppressNextCustomClick = true;
+            saveCustomLabelOrder();
         }
     });
 
-    container.addEventListener("pointerup", endDrag);
-    container.addEventListener("pointercancel", endDrag);
-
-    // 並び替え直後の1回だけクリックを無効化する（記録や削除が誤って走らないように）
     container.addEventListener("click", (ev) => {
         if (suppressNextCustomClick) {
             ev.stopPropagation();

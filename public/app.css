@@ -925,7 +925,7 @@ body {
     touch-action: pan-x;
 }
 
-.qc .c.dragging {
+.qc .c.sortable-chosen {
     opacity: .6;
     transform: scale(1.05);
     z-index: 2;
@@ -939,7 +939,7 @@ body {
     touch-action: pan-y;
 }
 
-.modal-row.dragging {
+.modal-row.sortable-chosen {
     opacity: .6;
     background: #f7f8f6;
 }
