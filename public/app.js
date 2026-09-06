@@ -534,9 +534,23 @@ function renderLog(entries, summary) {
     $("#sum-pee").textContent = `${toilet.pee || 0}回`;
     $("#sum-poop").textContent = `${toilet.poop || 0}回`;
 
+    // 種類ごとの最新1件のIDを集める（カスタムはラベルごとに別扱い、当日のみで判定）
+    const latestByKey = new Map();
+    lastLogEntries.forEach(e => {
+        const key = e.kind === "custom" ? `custom:${e.note || ""}` : e.kind;
+        const existing = latestByKey.get(key);
+        if (!existing || new Date(e.occurred_at) > new Date(existing.occurred_at)) {
+            latestByKey.set(key, e);
+        }
+    });
+    const latestIds = new Set(Array.from(latestByKey.values()).map(e => e.id));
+
     $("#log-list").innerHTML = lastLogEntries.map(e => {
         const d = new Date(e.occurred_at);
         const tm = two(d.getHours()) + ":" + two(d.getMinutes());
+        const tmHtml = latestIds.has(e.id)
+            ? `${tm}<br><span class="rel-time">${formatRelativeTime(e.occurred_at)}</span>`
+            : tm;
         const ROLE_CHAR = { husband: "夫", wife: "妻" };
         const roleClass = e.recorded_by_role === "wife" ? "w" : e.recorded_by_role === "husband" ? "h" : "o";
         const roleChar = ROLE_CHAR[e.recorded_by_role] || "他";
@@ -565,7 +579,7 @@ function renderLog(entries, summary) {
         }
         const detailHtml = detail ? ` <span style="color:var(--hint); font-size:11px;">(${escapeHtml(detail)})</span>` : "";
         return `<div class="rec" data-id="${e.id}">
-            <span class="tm">${tm}</span>
+            <span class="tm">${tmHtml}</span>
             <span class="ic">${LOG_ICON[e.kind] || "📌"}</span>
             <span class="txt" style="flex:1;">${escapeHtml(label)}${detailHtml}</span>
             ${who}
@@ -616,6 +630,17 @@ function formatMinSec(totalSec) {
     const m = Math.floor(sec / 60);
     const s = sec % 60;
     return `${m}分${s}秒`;
+}
+
+// 記録時刻からの経過時間を「○時間○分前」の形で返す
+function formatRelativeTime(occurredAt) {
+    const diffMin = Math.max(0, Math.floor((Date.now() - new Date(occurredAt).getTime()) / 60000));
+    if (diffMin < 1) return "たった今";
+    const h = Math.floor(diffMin / 60);
+    const m = diffMin % 60;
+    if (h <= 0) return `${m}分前`;
+    if (m <= 0) return `${h}時間前`;
+    return `${h}時間${m}分前`;
 }
 
 let breastfeedContext = null; // { mode, editKind, editId, date }

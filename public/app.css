@@ -489,9 +489,9 @@ body {
 }
 
 /* 排泄パネルは表示量が少ないため、他の2つより幅を狭める */
-.stat.narrow {
+/* .stat.narrow {
     flex: 0.7;
-}
+} */
 
 /* 授乳・哺乳瓶・排泄パネルの内訳（右/左/計、母乳/ミルクなど）の行 */
 .stat-line {
@@ -805,6 +805,16 @@ body {
     font-size: 12px;
     color: var(--hint);
     width: 40px;
+}
+
+/* 各種類で最新1件の時刻の下にだけ、経過時間を小さく表示する */
+.rec .tm .rel-time {
+    display: block;
+    font-size: 9px;
+    font-weight: 600;
+    color: var(--danger);
+    margin-top: 2px;
+    white-space: nowrap;
 }
 
 /* 種類のアイコン（🍼🤱👶🌙） */
