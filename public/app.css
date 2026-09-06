@@ -1001,6 +1001,17 @@ body {
 .log-empty-space {
     flex: 1;
     min-height: 120px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.log-empty-hint {
+    font-size: 12px;
+    color: var(--accent-dark);
+    background: var(--accent-bg);
+    padding: 6px 14px;
+    border-radius: 999px;
 }
 
 /* 育児記録タブの回数パネルだけ、カテゴリごとに色分けする */
