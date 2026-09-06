@@ -407,14 +407,14 @@ const LOG_ICON = {
     pee: "💧", poop: "💩", both: "💧💩", sleep_start: "💤", wake: "⏰",
     custom: "📌", pump: "🫙", bottle: "🍼", snack: "🍪", temperature: "🌡️",
     medicine: "💊", runny_nose: "🤧", fever: "🤒", vomit: "🤮",
-    breast_left: "🤱", breast_right: "🤱"
+    breastfeeding: "🤱"
 };
 const LOG_LABEL = {
     milk: "ミルク", breast: "母乳", solid: "離乳食", meal: "ごはん", drink: "飲み物",
     pee: "おしっこ", poop: "うんち", both: "両方", sleep_start: "寝た", wake: "起きた",
     pump: "搾乳", bottle: "哺乳瓶", snack: "おやつ", temperature: "体温",
     medicine: "くすり", runny_nose: "鼻水", fever: "発熱", vomit: "吐く",
-    breast_left: "授乳(左)", breast_right: "授乳(右)"
+    breastfeeding: "授乳"
 };
 // ml/gを入力する記録の種類と、単位・プリセットの基準値
 // ※bottle(哺乳瓶)・breastfeeding(授乳)・pump(搾乳器)は専用モーダルを別途作るため、ここには含めない
@@ -523,9 +523,9 @@ function renderLog(entries, summary) {
     const bottle = summary.bottle || {};
     const toilet = summary.toilet || {};
 
-    $("#sum-breast-total").textContent = `${bf.total.count || 0}回 / ${formatMinSec(bf.total.seconds)}`;
-    $("#sum-breast-right").textContent = `${bf.right.count || 0}回 / ${formatMinSec(bf.right.seconds)}`;
-    $("#sum-breast-left").textContent = `${bf.left.count || 0}回 / ${formatMinSec(bf.left.seconds)}`;
+    $("#sum-breast-total").textContent = `🤱 ${bf.total.count || 0}回`;
+    $("#sum-breast-left").textContent = formatMinSec(bf.left.seconds);
+    $("#sum-breast-right").textContent = formatMinSec(bf.right.seconds);
 
     $("#sum-bottle-count").textContent = `🍼 ${bottle.count || 0}回`;
     $("#sum-bottle-breast").textContent = `${bottle.breast_ml || 0}ml`;
@@ -550,8 +550,11 @@ function renderLog(entries, summary) {
             if (e.breast_ml) parts.push(`母乳${e.breast_ml}ml`);
             if (e.formula_ml) parts.push(`ミルク${e.formula_ml}ml`);
             detail = parts.join(" / ") || e.memo || "";
-        } else if (e.kind === "breast_left" || e.kind === "breast_right") {
-            detail = formatSec(e.duration_sec || 0) + (e.memo ? ` ${e.memo}` : "");
+        } else if (e.kind === "breastfeeding") {
+            const parts = [];
+            if (e.left_duration_sec) parts.push(`左${formatSec(e.left_duration_sec)}`);
+            if (e.right_duration_sec) parts.push(`右${formatSec(e.right_duration_sec)}`);
+            detail = parts.join(" / ") + (e.memo ? ` ${e.memo}` : "");
         } else if (e.kind === "pump") {
             const parts = [];
             if (e.duration_sec) parts.push(`${Math.round(e.duration_sec / 60)}分`);
@@ -583,7 +586,7 @@ function renderLog(entries, summary) {
             if (!entry) return;
             if (entry.kind === "bottle") {
                 openBottleDetail(entry);
-            } else if (entry.kind === "breast_left" || entry.kind === "breast_right") {
+            } else if (entry.kind === "breastfeeding") {
                 openBreastfeedingDetail(entry);
             } else if (entry.kind === "pump") {
                 openPumpDetail(entry);
@@ -671,18 +674,17 @@ function stopBreastTimerTick() {
     breastTimerTickInterval = null;
 }
 
-// existingがあれば編集（片側のみ）、なければ新規（左右両方使える）
+// existingがあれば編集、なければ新規（1エントリに左右の時間をまとめて記録する）
 function openBreastfeedingDetail(existing) {
     const dateForEntry = existing ? toDateStr(existing.occurred_at) : todayStr();
     breastfeedContext = {
         mode: existing ? "edit" : "create",
-        editKind: existing?.kind,
         editId: existing?.id,
         date: dateForEntry
     };
     breastTimers = {
-        left: { running: false, startedAt: null, accumulatedSec: existing?.kind === "breast_left" ? (existing.duration_sec || 0) : 0 },
-        right: { running: false, startedAt: null, accumulatedSec: existing?.kind === "breast_right" ? (existing.duration_sec || 0) : 0 }
+        left: { running: false, startedAt: null, accumulatedSec: existing?.left_duration_sec || 0 },
+        right: { running: false, startedAt: null, accumulatedSec: existing?.right_duration_sec || 0 }
     };
     $("#breastfeeding-title").textContent = existing ? "授乳を編集" : "授乳を記録";
     $("#breastfeeding-time").value = existing ? toTimeStr(existing.occurred_at) : toTimeStr();
@@ -705,29 +707,27 @@ async function saveBreastfeedingDetail() {
         if (breastTimers[side].running) toggleBreastTimer(side);
     });
 
-    const { mode, editKind, editId, date } = breastfeedContext;
+    const { mode, editId, date } = breastfeedContext;
     const time = $("#breastfeeding-time").value || toTimeStr();
     const memo = $("#breastfeeding-memo").value || "";
-    const occurredAt = date + "T" + time;
 
-    if (mode === "edit") {
-        const side = editKind === "breast_left" ? "left" : "right";
-        await api("PATCH", "/log_entries/" + editId, {
-            occurred_at: occurredAt,
-            duration_sec: breastTimers[side].accumulatedSec,
-            memo
-        });
+    if (breastTimers.left.accumulatedSec <= 0 && breastTimers.right.accumulatedSec <= 0) {
+        alert("左右どちらかのタイマーを計測してください");
+        return;
+    }
+
+    const body = {
+        occurred_at: date + "T" + time,
+        left_duration_sec: breastTimers.left.accumulatedSec,
+        right_duration_sec: breastTimers.right.accumulatedSec,
+        memo
+    };
+
+    if (mode === "create") {
+        body.kind = "breastfeeding";
+        await api("POST", "/log_entries", body);
     } else {
-        if (breastTimers.left.accumulatedSec <= 0 && breastTimers.right.accumulatedSec <= 0) {
-            alert("左右どちらかのタイマーを計測してください");
-            return;
-        }
-        if (breastTimers.left.accumulatedSec > 0) {
-            await api("POST", "/log_entries", { kind: "breast_left", occurred_at: occurredAt, duration_sec: breastTimers.left.accumulatedSec, memo });
-        }
-        if (breastTimers.right.accumulatedSec > 0) {
-            await api("POST", "/log_entries", { kind: "breast_right", occurred_at: occurredAt, duration_sec: breastTimers.right.accumulatedSec, memo });
-        }
+        await api("PATCH", "/log_entries/" + editId, body);
     }
     closeBreastfeedingDetail();
     if (mode === "create" && date !== currentLogDate) {

@@ -493,15 +493,6 @@ body {
     flex: 0.7;
 }
 
-/* 授乳は文字数が多いので少し広げ、その分哺乳瓶を少し狭める */
-.stat.milk {
-    flex: 1.15;
-}
-
-.stat.meal {
-    flex: 0.9;
-}
-
 /* 授乳・哺乳瓶・排泄パネルの内訳（右/左/計、母乳/ミルクなど）の行 */
 .stat-line {
     display: flex;
@@ -1011,7 +1002,7 @@ body {
 /* 数値の桁が変わっても位置がずれないよう、値の表示幅を固定する */
 #v-log .stat.milk .stat-line b {
     display: inline-block;
-    width: 92px;
+    width: 56px;
     text-align: center;
     white-space: nowrap;
 }

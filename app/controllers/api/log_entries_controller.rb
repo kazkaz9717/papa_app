@@ -67,16 +67,14 @@ module Api
       breastfeeding = scope.where(kind: "breastfeeding")
       bottle = scope.where(kind: "bottle")
 
-      left_count = breastfeeding.where("left_duration_sec > 0").count
-      right_count = breastfeeding.where("right_duration_sec > 0").count
       left_seconds = breastfeeding.sum(:left_duration_sec)
       right_seconds = breastfeeding.sum(:right_duration_sec)
 
       {
         breastfeeding: {
-          left: { count: left_count, seconds: left_seconds },
-          right: { count: right_count, seconds: right_seconds },
-          total: { count: left_count + right_count, seconds: left_seconds + right_seconds }
+          left: { seconds: left_seconds },
+          right: { seconds: right_seconds },
+          total: { count: breastfeeding.count, seconds: left_seconds + right_seconds }
         },
         bottle: {
           count: bottle.count,
@@ -105,7 +103,7 @@ module Api
         right_duration_sec: entry.right_duration_sec,
         occurred_at: entry.occurred_at,
         recorded_by: entry.recorded_by&.name,
-        recorded_by_role: entry.recorded_by_role
+        recorded_by_role: entry.recorded_by&.role
       }
     end
   end
