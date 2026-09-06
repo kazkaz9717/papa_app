@@ -648,16 +648,8 @@ function renderLog(entries, summary) {
             <span class="ic">${LOG_ICON[e.kind] || "📌"}</span>
             <span class="txt" style="flex:1;">${escapeHtml(label)}${detailHtml}</span>
             ${who}
-            <button class="del" data-del-log="${e.id}" title="削除">×</button>
         </div>`;
     }).join("") || `<div class="empty">記録がありません</div>`;
-
-    $$("#log-list [data-del-log]").forEach(btn => {
-        btn.addEventListener("click", (ev) => {
-            ev.stopPropagation();
-            deleteLogEntry(btn.dataset.delLog);
-        });
-    });
 
     $$("#log-list .rec").forEach(el => {
         el.addEventListener("click", () => {
@@ -677,9 +669,10 @@ function renderLog(entries, summary) {
 }
 
 async function deleteLogEntry(id) {
-    if (!confirm("この記録を削除しますか？")) return;
+    if (!confirm("この記録を削除しますか？")) return false;
     await api("DELETE", "/log_entries/" + id);
     loadLog();
+    return true;
 }
 
 // mm:ss形式に整形する
@@ -782,6 +775,7 @@ function openBreastfeedingDetail(existing) {
     renderBreastTimers();
     $("#breastfeeding-modal").hidden = false;
     startBreastTimerTick();
+    $("#breastfeeding-delete").hidden = !existing;
 }
 
 function closeBreastfeedingDetail() {
@@ -838,6 +832,7 @@ function openPumpDetail(existing) {
     $("#pump-amount").value = existing?.amount ?? "";
     $("#pump-memo").value = existing?.memo ?? "";
     $("#pump-modal").hidden = false;
+    $("#pump-delete").hidden = !existing;
     syncAmountScroll("#pump-amount-scroll", "#pump-amount", { instant: true });
 }
 
@@ -890,6 +885,7 @@ function openBottleDetail(existing) {
     $("#bottle-formula-ml").value = existing?.formula_ml ?? "";
     $("#bottle-memo").value = existing?.memo ?? "";
     $("#bottle-modal").hidden = false;
+    $("#bottle-delete").hidden = !existing;
     syncAmountScroll("#bottle-breast-scroll", "#bottle-breast-ml", { instant: true });
     syncAmountScroll("#bottle-formula-scroll", "#bottle-formula-ml", { instant: true });
 }
@@ -948,6 +944,7 @@ function openLogDetail(kind, note, existing) {
     $("#log-detail-temperature").value = existing?.temperature ?? "";
     $("#log-detail-memo").value = existing?.memo ?? "";
     $("#log-detail-modal").hidden = false;
+    $("#log-detail-delete").hidden = !existing;
 
     // モーダルを表示した後にスクロール位置を合わせる（非表示中はscrollIntoViewが効かないため）
     if (isAmount) {
@@ -1481,6 +1478,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
     $("#log-detail-save").addEventListener("click", saveLogDetail)
     $("#log-detail-cancel").addEventListener("click", closeLogDetail);
+    $("#log-detail-delete").addEventListener("click", async () => {
+        if (!logDetailContext?.id) return;
+        if (await deleteLogEntry(logDetailContext.id)) closeLogDetail();
+    });
+    $("#bottle-delete").addEventListener("click", async () => {
+        if (!bottleContext?.id) return;
+        if (await deleteLogEntry(bottleContext.id)) closeBottleDetail();
+    });
+    $("#breastfeeding-delete").addEventListener("click", async () => {
+        if (!breastfeedContext?.editId) return;
+        if (await deleteLogEntry(breastfeedContext.editId)) closeBreastfeedingDetail();
+    });
+    $("#pump-delete").addEventListener("click", async () => {
+        if (!pumpContext?.id) return;
+        if (await deleteLogEntry(pumpContext.id)) closePumpDetail();
+    });
     $("#bottle-save").addEventListener("click", saveBottleDetail);
     $("#bottle-cancel").addEventListener("click", closeBottleDetail);
     $("#bottle-breast-minus").addEventListener("click", () => adjustAmountValue("#bottle-breast-ml", "#bottle-breast-scroll", -10));
