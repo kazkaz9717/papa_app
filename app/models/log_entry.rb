@@ -1,8 +1,9 @@
 class LogEntry < ApplicationRecord
   # milk/breastは過去データ表示のため残すが、新規記録では使わない
+  # breast_left/breast_rightは廃止し、breastfeeding（左右2カラムの1エントリ）に統合した
   KINDS = %w[
     milk breast solid meal drink pee poop both sleep_start wake custom
-    breast_left breast_right pump bottle snack temperature medicine
+    breastfeeding pump bottle snack temperature medicine
     runny_nose fever vomit
   ].freeze
 

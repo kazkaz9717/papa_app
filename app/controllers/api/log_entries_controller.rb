@@ -22,6 +22,8 @@ module Api
         breast_ml: params[:breast_ml].presence,
         formula_ml: params[:formula_ml].presence,
         temperature: params[:temperature].presence,
+        left_duration_sec: params[:left_duration_sec].presence,
+        right_duration_sec: params[:right_duration_sec].presence,
         occurred_at: params[:occurred_at].presence || Time.current,
         recorded_by: current_user
       )
@@ -42,7 +44,9 @@ module Api
         duration_sec: params[:duration_sec].presence,
         breast_ml: params[:breast_ml].presence,
         formula_ml: params[:formula_ml].presence,
-        temperature: params[:temperature].presence
+        temperature: params[:temperature].presence,
+        left_duration_sec: params[:left_duration_sec].presence,
+        right_duration_sec: params[:right_duration_sec].presence
       )
       render json: {
         entry: entry_json(entry),
@@ -59,20 +63,20 @@ module Api
 
     private
 
-    # 授乳(左右合計)・哺乳瓶(母乳/ミルクml)・排泄(おしっこ/うんち)の3分割で集計する
     def summary_for(scope)
-      left = scope.where(kind: "breast_left")
-      right = scope.where(kind: "breast_right")
+      breastfeeding = scope.where(kind: "breastfeeding")
       bottle = scope.where(kind: "bottle")
+
+      left_count = breastfeeding.where("left_duration_sec > 0").count
+      right_count = breastfeeding.where("right_duration_sec > 0").count
+      left_seconds = breastfeeding.sum(:left_duration_sec)
+      right_seconds = breastfeeding.sum(:right_duration_sec)
 
       {
         breastfeeding: {
-          left: { count: left.count, seconds: left.sum(:duration_sec) },
-          right: { count: right.count, seconds: right.sum(:duration_sec) },
-          total: {
-            count: left.count + right.count,
-            seconds: left.sum(:duration_sec) + right.sum(:duration_sec)
-          }
+          left: { count: left_count, seconds: left_seconds },
+          right: { count: right_count, seconds: right_seconds },
+          total: { count: left_count + right_count, seconds: left_seconds + right_seconds }
         },
         bottle: {
           count: bottle.count,
@@ -80,7 +84,6 @@ module Api
           formula_ml: bottle.sum(:formula_ml)
         },
         toilet: {
-          # 「両方」はおしっこ・うんちの両方の回数にカウントする
           pee: scope.where(kind: %w[pee both]).count,
           poop: scope.where(kind: %w[poop both]).count
         }
@@ -98,9 +101,11 @@ module Api
         breast_ml: entry.breast_ml,
         formula_ml: entry.formula_ml,
         temperature: entry.temperature,
+        left_duration_sec: entry.left_duration_sec,
+        right_duration_sec: entry.right_duration_sec,
         occurred_at: entry.occurred_at,
         recorded_by: entry.recorded_by&.name,
-        recorded_by_role: entry.recorded_by&.role
+        recorded_by_role: entry.recorded_by_role
       }
     end
   end
