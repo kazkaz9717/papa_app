@@ -171,9 +171,13 @@ body {
 /* 記録タブのヘッダー右側：赤ちゃんの名前と月齢 */
 .baby-age {
     margin: 0;
-    font-size: 12px;
+    font-size: 11px;
     font-weight: 600;
     color: var(--accent-dark);
+    background: var(--accent-bg, rgba(15, 110, 86, 0.12));
+    padding: 3px 10px;
+    border-radius: 10px;
+    white-space: nowrap;
 }
 
 /* 画面上部のヘッダー（タイトル・サブ情報）。スクロールしても上に固定表示 */
@@ -381,6 +385,37 @@ body {
 
 .date-nav:active {
     background: #f0f1ee;
+}
+
+.amt-scroll {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px calc(50% - 28px);
+    scroll-snap-type: x mandatory;
+    -webkit-overflow-scrolling: touch;
+}
+
+.amt-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.amt-chip {
+    flex-shrink: 0;
+    scroll-snap-align: center;
+    padding: 8px 14px;
+    border-radius: 9px;
+    border: 1px solid #d5d9d4;
+    font-size: 13px;
+    color: var(--muted);
+    white-space: nowrap;
+}
+
+.amt-chip.on {
+    border-color: var(--accent);
+    background: var(--accent-bg, rgba(15, 110, 86, 0.12));
+    color: var(--accent-dark);
+    font-weight: 600;
 }
 
 

@@ -159,7 +159,7 @@
                 <!-- 育児記録 -->
                 <section class="view" id="v-log">
                     <div class="hd">
-                        <div style="display:flex; align-items:baseline; gap:14px;">
+                        <div style="display:flex; align-items:flex-start; justify-content:space-between;">
                             <h2>📘 育児記録</h2>
                             <p class="baby-age" id="baby-age-badge"></p>
                         </div>
@@ -369,18 +369,17 @@
                                 style="flex:1; min-width:0; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; text-align:center;">
                             <button type="button" id="log-detail-amount-plus" class="date-nav">＋</button>
                         </div>
-                        <div style="display:flex; align-items:center; gap:6px;">
-                            <button type="button" id="log-detail-amount-prev" class="date-nav">‹</button>
-                            <div id="log-detail-amount-presets"
-                                style="flex:1; display:grid; grid-template-columns:repeat(3,1fr); gap:6px;"></div>
-                            <button type="button" id="log-detail-amount-next" class="date-nav">›</button>
-                        </div>
+                        <div class="amt-scroll" id="log-detail-amount-scroll"></div>
                     </div>
 
                     <div id="log-detail-temp-wrap" style="margin-bottom:10px;" hidden>
                         <label style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">体温</label>
-                        <input type="text" inputmode="decimal" id="log-detail-temperature" placeholder="36.5"
-                            style="width:100%; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px;">
+                        <div style="display:flex; align-items:center; gap:6px;">
+                            <button type="button" id="log-detail-temp-minus" class="date-nav">－</button>
+                            <input type="text" inputmode="decimal" id="log-detail-temperature" placeholder="36.5"
+                                style="flex:1; min-width:0; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; text-align:center;">
+                            <button type="button" id="log-detail-temp-plus" class="date-nav">＋</button>
+                        </div>
                     </div>
 
                     <div id="log-detail-memo-wrap" style="margin-bottom:10px;" hidden>
@@ -409,25 +408,27 @@
                     <div style="margin-bottom:10px;">
                         <label
                             style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">母乳(ml)</label>
-                        <div style="display:flex; align-items:center; gap:6px;">
+                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
                             <button type="button" id="bottle-breast-minus" class="date-nav">－</button>
                             <input type="text" inputmode="numeric" pattern="[0-9]*" id="bottle-breast-ml"
                                 placeholder="0"
                                 style="flex:1; min-width:0; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; text-align:center;">
                             <button type="button" id="bottle-breast-plus" class="date-nav">＋</button>
                         </div>
+                        <div class="amt-scroll" id="bottle-breast-scroll"></div>
                     </div>
 
                     <div style="margin-bottom:10px;">
                         <label
                             style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">ミルク(ml)</label>
-                        <div style="display:flex; align-items:center; gap:6px;">
+                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
                             <button type="button" id="bottle-formula-minus" class="date-nav">－</button>
                             <input type="text" inputmode="numeric" pattern="[0-9]*" id="bottle-formula-ml"
                                 placeholder="0"
                                 style="flex:1; min-width:0; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; text-align:center;">
                             <button type="button" id="bottle-formula-plus" class="date-nav">＋</button>
                         </div>
+                        <div class="amt-scroll" id="bottle-formula-scroll"></div>
                     </div>
 
                     <div style="margin-bottom:10px;">
@@ -502,7 +503,7 @@
                             style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">時間(分)</label>
                         <div style="display:flex; align-items:center; gap:6px;">
                             <button type="button" id="pump-duration-minus" class="date-nav">－</button>
-                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="pump-duration" placeholder="0"
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="pump-duration" placeholder="10"
                                 style="flex:1; min-width:0; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; text-align:center;">
                             <button type="button" id="pump-duration-plus" class="date-nav">＋</button>
                         </div>
@@ -511,12 +512,13 @@
                     <div style="margin-bottom:10px;">
                         <label
                             style="display:block; font-size:12px; color:var(--muted); margin-bottom:4px;">量(ml)</label>
-                        <div style="display:flex; align-items:center; gap:6px;">
+                        <div style="display:flex; align-items:center; gap:6px; margin-bottom:8px;">
                             <button type="button" id="pump-amount-minus" class="date-nav">－</button>
-                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="pump-amount" placeholder="0"
+                            <input type="text" inputmode="numeric" pattern="[0-9]*" id="pump-amount" placeholder="80"
                                 style="flex:1; min-width:0; height:36px; border:1px solid #d5d9d4; border-radius:9px; padding:0 8px; font-size:14px; text-align:center;">
                             <button type="button" id="pump-amount-plus" class="date-nav">＋</button>
                         </div>
+                        <div class="amt-scroll" id="pump-amount-scroll"></div>
                     </div>
 
                     <div style="margin-bottom:10px;">

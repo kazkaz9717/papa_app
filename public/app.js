@@ -140,11 +140,20 @@ function renderBabyAge() {
 
     let years = today.getFullYear() - due.getFullYear();
     let months = today.getMonth() - due.getMonth();
-    if (today.getDate() < due.getDate()) months--;
-    if (months < 0) { years--; months += 12; }
+    let days = today.getDate() - due.getDate();
+
+    if (days < 0) {
+        months--;
+        const prevMonthLastDay = new Date(today.getFullYear(), today.getMonth(), 0).getDate();
+        days += prevMonthLastDay;
+    }
+    if (months < 0) {
+        years--;
+        months += 12;
+    }
 
     const namePart = babyName ? `<span style="margin-right:6px;">${escapeHtml(babyName)}</span>` : "";
-    el.innerHTML = `${namePart}${years}歳${months}ヶ月`;
+    el.innerHTML = `${namePart}${years}歳${months}ヶ月${days}日`;
 }
 
 
@@ -442,10 +451,12 @@ const LOG_LABEL = {
 // ml/gを入力する記録の種類と、単位・プリセットの基準値
 // ※bottle(哺乳瓶)・breastfeeding(授乳)・pump(搾乳器)は専用モーダルを別途作るため、ここには含めない
 const AMOUNT_CONFIG = {
-    milk: { unit: "ml", base: 80 },
-    breast: { unit: "ml", base: 80 },
-    drink: { unit: "ml", base: 80 },
-    solid: { unit: "g", base: 50 }
+    milk: { unit: "ml" },
+    breast: { unit: "ml" },
+    drink: { unit: "ml" },
+    solid: { unit: "g" },
+    meal: { unit: "g" },
+    snack: { unit: "g" }
 };
 
 // 文字列をHTMLとして安全に埋め込めるようにエスケープする
@@ -481,52 +492,66 @@ let currentLogDate = todayStr();
 let customLogLabels = ["", "", "", ""];
 let lastLogEntries = [];
 let logDetailContext = null; // { mode: "create"|"edit", kind, id, note }
-const MIN_AMOUNT = 0;
-const MAX_AMOUNT = 300;                  // ml の上限
-const MIN_PRESET_BASE = 10;              // プリセット一番左の最小値（0mlは出さない）
-const MAX_PRESET_BASE = MAX_AMOUNT - 20; // プリセット一番右が300を超えないための上限(280)
+const AMOUNT_MIN = 0;
+const AMOUNT_MAX = 300;
+const AMOUNT_STEP = 10;
+const AMOUNT_DEFAULT = 80; // 未入力時にスクロールの中心にする基準値
 
-let amountPresetBase = 70;
-let currentAmountUnit = "ml";   // プリセットボタンに表示する単位(ml/g)
-let currentAmountDefaultBase = 80; // 未入力時にパネルの中心にする基準値
+const TEMPERATURE_MIN = 34.0;
+const TEMPERATURE_MAX = 42.0;
+const TEMPERATURE_STEP = 0.1;
+const TEMPERATURE_DEFAULT = "36.5";
 
-// プリセットボタン（左/中央/右の3つ）を今のamountPresetBaseに従って描画する
-function renderAmountPresets() {
-    const current = Number($("#log-detail-amount").value) || null;
-    const presets = [amountPresetBase, amountPresetBase + 10, amountPresetBase + 20];
-    $("#log-detail-amount-presets").innerHTML = presets.map(v =>
-        `<button type="button" class="preset-btn ${v === current ? "on" : ""}" data-preset="${v}">${v}${currentAmountUnit}</button>`
+// 量(ml/g)入力欄の横スクロール式プリセットを、指定したコンテナに0〜300まで一度だけ描画する
+function buildAmountScroll(containerSel, inputSel, unit) {
+    const container = $(containerSel);
+    if (!container) return;
+    const values = [];
+    for (let v = AMOUNT_MIN; v <= AMOUNT_MAX; v += AMOUNT_STEP) values.push(v);
+    container.innerHTML = values.map(v =>
+        `<span class="amt-chip" data-value="${v}">${v}${unit}</span>`
     ).join("");
-    $$("#log-detail-amount-presets [data-preset]").forEach(btn => {
-        btn.addEventListener("click", () => {
-            $("#log-detail-amount").value = btn.dataset.preset;
-            centerAmountPresets(btn.dataset.preset); // タップした値を中心にパネルを追従させる
+    $$(`${containerSel} .amt-chip`).forEach(chip => {
+        chip.addEventListener("click", () => {
+            $(inputSel).value = chip.dataset.value;
+            syncAmountScroll(containerSel, inputSel);
         });
     });
-
-    // 端まで来たら ‹ / › ボタンを押せなくする
-    $("#log-detail-amount-prev").disabled = amountPresetBase <= MIN_PRESET_BASE;
-    $("#log-detail-amount-next").disabled = amountPresetBase >= MAX_PRESET_BASE;
 }
 
-// 今の量（rawValue）を中心に、プリセットの範囲(amountPresetBase)を計算し直して描画する
-// 空欄のときは80mlを基準にする（未入力時のデフォルト表示）
-function centerAmountPresets(rawValue) {
-    const hasValue = rawValue !== "" && rawValue != null && !Number.isNaN(Number(rawValue));
-    const base = hasValue ? Number(rawValue) : currentAmountDefaultBase;
-    const rounded = Math.round(base / 10) * 10;
-    amountPresetBase = Math.min(MAX_PRESET_BASE, Math.max(MIN_PRESET_BASE, rounded - 10));
-    renderAmountPresets();
+// 現在の入力値に一番近い10刻みの値をハイライトし、中央にスクロールする
+function syncAmountScroll(containerSel, inputSel, opts) {
+    const container = $(containerSel);
+    if (!container) return;
+    const raw = $(inputSel).value;
+    const hasValue = raw !== "" && raw != null && !Number.isNaN(Number(raw));
+    const base = hasValue ? Number(raw) : AMOUNT_DEFAULT;
+    const rounded = Math.min(AMOUNT_MAX, Math.max(AMOUNT_MIN, Math.round(base / AMOUNT_STEP) * AMOUNT_STEP));
+    $$(`${containerSel} .amt-chip`).forEach(chip => {
+        chip.classList.toggle("on", Number(chip.dataset.value) === rounded);
+    });
+    const target = container.querySelector(`.amt-chip[data-value="${rounded}"]`);
+    if (target) {
+        target.scrollIntoView({ behavior: (opts && opts.instant) ? "auto" : "smooth", inline: "center", block: "nearest" });
+    }
 }
 
-// ml（量）を増減させる共通処理（±10ボタン用）
-function adjustAmount(delta) {
-    const input = $("#log-detail-amount");
-    // 空欄のときはパネルと同じ基準(80)を出発点にする
-    const current = input.value === "" ? 80 : (parseInt(input.value, 10) || 0);
-    const next = Math.min(MAX_AMOUNT, Math.max(MIN_AMOUNT, current + delta));
+// ±10ボタン共通処理（inputとスクロール表示を両方更新する）
+function adjustAmountValue(inputSel, containerSel, delta) {
+    const input = $(inputSel);
+    const current = input.value === "" ? AMOUNT_DEFAULT : (parseInt(input.value, 10) || 0);
+    const next = Math.min(AMOUNT_MAX, Math.max(AMOUNT_MIN, current + delta));
     input.value = next;
-    centerAmountPresets(next);
+    syncAmountScroll(containerSel, inputSel);
+}
+
+// 体温±0.1ボタン用（浮動小数の誤差を防ぐため四捨五入して扱う）
+function adjustTemperature(delta) {
+    const input = $("#log-detail-temperature");
+    const current = input.value === "" ? Number(TEMPERATURE_DEFAULT) : (parseFloat(input.value) || 0);
+    let next = Math.round((current + delta) * 10) / 10;
+    next = Math.min(TEMPERATURE_MAX, Math.max(TEMPERATURE_MIN, next));
+    input.value = next.toFixed(1);
 }
 
 async function loadLog(dateStr) {
@@ -600,7 +625,8 @@ function renderLog(entries, summary) {
         } else if (e.kind === "temperature") {
             detail = e.temperature ? `${e.temperature}℃` : "";
         } else {
-            detail = e.amount ? `${e.amount}ml` : (e.memo || "");
+            const unit = AMOUNT_CONFIG[e.kind]?.unit || "ml";
+            detail = e.amount ? `${e.amount}${unit}` : (e.memo || "");
         }
         const detailHtml = detail ? ` <span style="color:var(--hint); font-size:11px;">(${escapeHtml(detail)})</span>` : "";
         return `<div class="rec" data-id="${e.id}">
@@ -798,6 +824,7 @@ function openPumpDetail(existing) {
     $("#pump-amount").value = existing?.amount ?? "";
     $("#pump-memo").value = existing?.memo ?? "";
     $("#pump-modal").hidden = false;
+    syncAmountScroll("#pump-amount-scroll", "#pump-amount", { instant: true });
 }
 
 function closePumpDetail() {
@@ -805,10 +832,10 @@ function closePumpDetail() {
     pumpContext = null;
 }
 
-// 時間(分)欄・量(ml)欄、両方に使う共通の±ボタン処理
+// 時間(分)欄の±ボタン処理（空欄時は10を基準に増減する）
 function adjustPumpValue(inputSelector, delta, max) {
     const input = $(inputSelector);
-    const current = parseInt(input.value, 10) || 0;
+    const current = input.value === "" ? 10 : (parseInt(input.value, 10) || 0);
     input.value = Math.min(max, Math.max(0, current + delta));
 }
 
@@ -849,8 +876,9 @@ function openBottleDetail(existing) {
     $("#bottle-formula-ml").value = existing?.formula_ml ?? "";
     $("#bottle-memo").value = existing?.memo ?? "";
     $("#bottle-modal").hidden = false;
+    syncAmountScroll("#bottle-breast-scroll", "#bottle-breast-ml", { instant: true });
+    syncAmountScroll("#bottle-formula-scroll", "#bottle-formula-ml", { instant: true });
 }
-
 function closeBottleDetail() {
     $("#bottle-modal").hidden = true;
     bottleContext = null;
@@ -899,19 +927,19 @@ function openLogDetail(kind, note, existing) {
 
     $("#log-detail-amount-wrap").hidden = !isAmount;
     $("#log-detail-temp-wrap").hidden = !isTemperature;
-    // メモは体温以外なら常に表示する（量とメモを同時に入力できるようにするため）
     $("#log-detail-memo-wrap").hidden = isTemperature;
 
     $("#log-detail-amount").value = existing?.amount ?? "";
-    if (isAmount) {
-        currentAmountUnit = amountConfig.unit;
-        currentAmountDefaultBase = amountConfig.base;
-        centerAmountPresets($("#log-detail-amount").value);
-    }
-
+    // 体温は新規記録時のみ36.5をデフォルト表示する（編集時は記録済みの値をそのまま出す）
     $("#log-detail-temperature").value = existing?.temperature ?? "";
     $("#log-detail-memo").value = existing?.memo ?? "";
     $("#log-detail-modal").hidden = false;
+
+    // モーダルを表示した後にスクロール位置を合わせる（非表示中はscrollIntoViewが効かないため）
+    if (isAmount) {
+        buildAmountScroll("#log-detail-amount-scroll", "#log-detail-amount", amountConfig.unit);
+        syncAmountScroll("#log-detail-amount-scroll", "#log-detail-amount", { instant: true });
+    }
 }
 
 let suppressNextTileClick = false; // 並び替え直後のクリックを1回だけ無効化するためのフラグ
@@ -1441,10 +1469,12 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#log-detail-cancel").addEventListener("click", closeLogDetail);
     $("#bottle-save").addEventListener("click", saveBottleDetail);
     $("#bottle-cancel").addEventListener("click", closeBottleDetail);
-    $("#bottle-breast-minus").addEventListener("click", () => adjustBottleAmount("#bottle-breast-ml", -10));
-    $("#bottle-breast-plus").addEventListener("click", () => adjustBottleAmount("#bottle-breast-ml", 10));
-    $("#bottle-formula-minus").addEventListener("click", () => adjustBottleAmount("#bottle-formula-ml", -10));
-    $("#bottle-formula-plus").addEventListener("click", () => adjustBottleAmount("#bottle-formula-ml", 10));
+    $("#bottle-breast-minus").addEventListener("click", () => adjustAmountValue("#bottle-breast-ml", "#bottle-breast-scroll", -10));
+    $("#bottle-breast-plus").addEventListener("click", () => adjustAmountValue("#bottle-breast-ml", "#bottle-breast-scroll", 10));
+    $("#bottle-formula-minus").addEventListener("click", () => adjustAmountValue("#bottle-formula-ml", "#bottle-formula-scroll", -10));
+    $("#bottle-formula-plus").addEventListener("click", () => adjustAmountValue("#bottle-formula-ml", "#bottle-formula-scroll", 10));
+    $("#bottle-breast-ml").addEventListener("input", () => syncAmountScroll("#bottle-breast-scroll", "#bottle-breast-ml"));
+    $("#bottle-formula-ml").addEventListener("input", () => syncAmountScroll("#bottle-formula-scroll", "#bottle-formula-ml"));
     $$("#log-tiles .c[data-kind='bottle']").forEach(el => el.addEventListener("click", () => openBottleDetail()));
     $$("#log-tiles .c[data-kind='breastfeeding']").forEach(el => el.addEventListener("click", () => openBreastfeedingDetail()));
     $("#breastfeeding-left-btn").addEventListener("click", () => toggleBreastTimer("left"));
@@ -1457,29 +1487,29 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#pump-cancel").addEventListener("click", closePumpDetail);
     $("#pump-duration-minus").addEventListener("click", () => adjustPumpValue("#pump-duration", -1, 180));
     $("#pump-duration-plus").addEventListener("click", () => adjustPumpValue("#pump-duration", 1, 180));
-    $("#pump-amount-minus").addEventListener("click", () => adjustPumpValue("#pump-amount", -10, 1000));
-    $("#pump-amount-plus").addEventListener("click", () => adjustPumpValue("#pump-amount", 10, 1000));
-    // ±10ボタン（前回は±5だったが10刻みに変更）
-    $("#log-detail-amount-minus").addEventListener("click", () => adjustAmount(-10));
-    $("#log-detail-amount-plus").addEventListener("click", () => adjustAmount(10));
+    $("#pump-amount-minus").addEventListener("click", () => adjustAmountValue("#pump-amount", "#pump-amount-scroll", -10));
+    $("#pump-amount-plus").addEventListener("click", () => adjustAmountValue("#pump-amount", "#pump-amount-scroll", 10));
+    $("#pump-amount").addEventListener("input", () => syncAmountScroll("#pump-amount-scroll", "#pump-amount"));
 
-    // 値を変えずにプリセットの範囲だけ手動でずらす（10〜280の間でクランプ）
-    $("#log-detail-amount-prev").addEventListener("click", () => {
-        amountPresetBase = Math.max(MIN_PRESET_BASE, amountPresetBase - 10);
-        renderAmountPresets();
-    });
-    $("#log-detail-amount-next").addEventListener("click", () => {
-        amountPresetBase = Math.min(MAX_PRESET_BASE, amountPresetBase + 10);
-        renderAmountPresets();
-    });
+    $("#log-detail-amount-minus").addEventListener("click", () => adjustAmountValue("#log-detail-amount", "#log-detail-amount-scroll", -10));
+    $("#log-detail-amount-plus").addEventListener("click", () => adjustAmountValue("#log-detail-amount", "#log-detail-amount-scroll", 10));
 
-    // 直接入力したときも、300を超えないようクランプしつつパネルを追従させる
+    // 直接入力したときも、300を超えないようクランプしつつスクロール位置を追従させる
     $("#log-detail-amount").addEventListener("input", () => {
         const el = $("#log-detail-amount");
         const num = parseInt(el.value, 10);
-        if (!Number.isNaN(num) && num > MAX_AMOUNT) el.value = MAX_AMOUNT;
-        centerAmountPresets(el.value);
+        if (!Number.isNaN(num) && num > AMOUNT_MAX) el.value = AMOUNT_MAX;
+        syncAmountScroll("#log-detail-amount-scroll", "#log-detail-amount");
     });
+
+    // 体温±0.1ボタン
+    $("#log-detail-temp-minus").addEventListener("click", () => adjustTemperature(-TEMPERATURE_STEP));
+    $("#log-detail-temp-plus").addEventListener("click", () => adjustTemperature(TEMPERATURE_STEP));
+
+    // 哺乳瓶・搾乳器は単位が常に"ml"固定なので、起動時に一度だけスクロールを構築しておく
+    buildAmountScroll("#bottle-breast-scroll", "#bottle-breast-ml", "ml");
+    buildAmountScroll("#bottle-formula-scroll", "#bottle-formula-ml", "ml");
+    buildAmountScroll("#pump-amount-scroll", "#pump-amount", "ml");
     $("#custom-edit-close").addEventListener("click", closeCustomEditModal);
     // ログ一覧の空欄部分（行以外の場所）をタップしたらタイル選択ポップアップを開く
     $("#log-list").addEventListener("click", (ev) => {
