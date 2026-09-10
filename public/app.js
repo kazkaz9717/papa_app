@@ -76,17 +76,19 @@ async function guestLogin() {
 }
 
 // ログイン画面を隠してアプリ本体を表示、データ読み込み開始
-function enterApp() {
-    $("#auth").hidden = true;
-    $("#app").hidden = false;
-    renderDueCountdown();
+async function enterApp() {
+    // 全部のタブのデータ取得を同時に始めておき、最初に表示される段取りタブの分だけ待ってから画面を出す
+    const checklistLoaded = loadChecklist();
     loadSettings();
-    loadChecklist();
     loadContractions();
     loadBenefits();
     loadLog();
     loadCustomLogLabels();
     applyTileOrder();
+    await checklistLoaded;
+    $("#auth").hidden = true;
+    $("#app").hidden = false;
+    renderDueCountdown();
 }
 function signOut() { Token.set(null); location.reload(); }
 
@@ -1449,12 +1451,17 @@ document.addEventListener("DOMContentLoaded", async () => {
     $("#set-copy-invite").addEventListener("click", copyInviteCode);
     $("#set-regenerate-invite").addEventListener("click", regenerateInviteCode);
 
-    // すでに鍵があれば自動ログイン
+    // すでに鍵があれば自動ログイン。判定が終わるまで#authは隠したままにして、ちらつきを防ぐ
     if (Token.get()) {
         try {
             const me = await api("GET", "/me");
             ME = { user: me.user, household: me.household };
             enterApp();
-        } catch { Token.set(null); }
+        } catch {
+            Token.set(null);
+            $("#auth").hidden = false;
+        }
+    } else {
+        $("#auth").hidden = false;
     }
 });
